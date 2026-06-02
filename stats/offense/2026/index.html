@@ -3,8 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Offense Stats 2026 — Beyond Stats D1</title>
+  <title>Offensive Stats 2026 — Beyond Stats D1</title>
   <link rel="stylesheet" href="/d1/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .loading { padding: 3rem; text-align: center; font-family: var(--mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.08em; }
+    .error { padding: 1.5rem; background: #fff5f5; border: 1px solid #fcc; color: #c00; font-size: 0.85rem; margin-bottom: 1.5rem; font-family: var(--mono); }
+    .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+    .filter-bar input, .filter-bar select { font-family: var(--mono); font-size: 0.75rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; height: 32px; }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+    .filter-bar input { width: 200px; }
+    .badge { display: inline-block; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.15rem 0.4rem; border-radius: 2px; margin-right: 2px; }
+    .badge-ao { background: #fce4ec; color: #880e4f; }
+    .badge-dr { background: #e3f2fd; color: #0d47a1; }
+    .badge-tr { background: #fff3e0; color: #bf360c; }
+    .badge-pf { background: #ede7f6; color: #4527a0; }
+    .row-count { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); margin-left: auto; align-self: center; }
+    thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
+    thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+    td.flags-cell { white-space: nowrap; min-width: 60px; }
+  </style>
 </head>
 <body>
 
@@ -13,7 +31,6 @@
   <ul class="nav-links">
     <li><a href="/d1/">Home</a></li>
     <li><a href="/d1/stats/offense/2026/" class="active">Offense</a></li>
-    <li><a href="/d1/stats/pitching/2026/">Pitching</a></li>
     <li><a href="/d1/portal/2026/">Portal</a></li>
   </ul>
 </nav>
@@ -21,113 +38,49 @@
 <div class="page-header">
   <div class="label">Statistics</div>
   <h1>Offensive Stats</h1>
-  <div class="subtitle">Division I Baseball — Batting & hitting metrics</div>
+  <div class="subtitle">Division I Baseball — Batting &amp; hitting metrics · 2026 Season</div>
 </div>
 
 <main>
-
   <div class="year-bar">
     <span class="year-label">Season</span>
     <a class="year-pill active" href="/d1/stats/offense/2026/">2026</a>
-    <!-- Add more years here as needed:
-    <a class="year-pill" href="/d1/stats/offense/2025/">2025</a>
-    -->
   </div>
 
-  <div class="tabs">
-    <a class="tab active" href="#">Batting</a>
-    <a class="tab" href="#">Team</a>
-    <a class="tab" href="#">Advanced</a>
-  </div>
+  <div id="error-msg" class="error" style="display:none"></div>
+  <div id="loading" class="loading">Loading data…</div>
 
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="s-label">Avg BA (top 50)</div>
-      <div class="s-value">.—</div>
-      <div class="s-sub">Batting average</div>
+  <div id="app" style="display:none">
+    <div class="stat-grid" id="offense-summary-cards"></div>
+    <div class="filter-bar">
+      <input type="text" id="offense-search" placeholder="Search player or team…" />
+      <select id="offense-pos-filter"><option value="">All Positions</option></select>
+      <select id="offense-class-filter"><option value="">All Classes</option></select>
+      <select id="offense-team-filter"><option value="">All Teams</option></select>
+      <select id="offense-flag-filter">
+        <option value="">All Players</option>
+        <option value="ao">Age Out</option>
+        <option value="dr">Draft Prospect</option>
+        <option value="tr">In Transfer Portal</option>
+        <option value="pf">Performance Flag</option>
+      </select>
+      <span class="row-count" id="offense-count"></span>
     </div>
-    <div class="stat-card">
-      <div class="s-label">Avg OBP</div>
-      <div class="s-value">.—</div>
-      <div class="s-sub">On-base pct</div>
-    </div>
-    <div class="stat-card">
-      <div class="s-label">Avg SLG</div>
-      <div class="s-value">.—</div>
-      <div class="s-sub">Slugging pct</div>
-    </div>
-    <div class="stat-card">
-      <div class="s-label">Total HR</div>
-      <div class="s-value">—</div>
-      <div class="s-sub">Home runs</div>
-    </div>
-  </div>
-
-  <div class="table-wrap">
-    <div class="table-title">
-      <h2>Player Batting — 2026</h2>
-    </div>
-    <table id="offense-table">
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Team</th>
-          <th>Yr</th>
-          <th class="num sorted">AVG</th>
-          <th class="num">OBP</th>
-          <th class="num">SLG</th>
-          <th class="num">OPS</th>
-          <th class="num">G</th>
-          <th class="num">AB</th>
-          <th class="num">H</th>
-          <th class="num">2B</th>
-          <th class="num">3B</th>
-          <th class="num">HR</th>
-          <th class="num">RBI</th>
-          <th class="num">SB</th>
-          <th class="num">BB</th>
-          <th class="num">K</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="name" colspan="17" style="color:var(--text-muted);font-style:italic;text-align:center;padding:2rem;">
-            Upload your data to populate this table — see instructions below.
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="table-wrap">
-    <div class="table-title">
-      <h2>How to add data</h2>
-    </div>
-    <div style="padding:1.25rem 1.5rem;font-size:0.85rem;color:var(--text-muted);line-height:1.8;">
-      <p>To populate this table, replace the placeholder <code>&lt;tbody&gt;</code> rows above with your data. Each row follows this pattern:</p>
-      <br/>
-      <pre style="background:var(--bg);padding:1rem;font-family:var(--mono);font-size:0.75rem;overflow-x:auto;border:1px solid var(--border);">&lt;tr&gt;
-  &lt;td class="name"&gt;Last, First&lt;/td&gt;
-  &lt;td&gt;School Name&lt;/td&gt;
-  &lt;td&gt;Jr&lt;/td&gt;
-  &lt;td class="num"&gt;.342&lt;/td&gt;
-  &lt;td class="num"&gt;.421&lt;/td&gt;
-  &lt;td class="num"&gt;.589&lt;/td&gt;
-  &lt;td class="num"&gt;1.010&lt;/td&gt;
-  &lt;td class="num"&gt;48&lt;/td&gt;
-  &lt;td class="num"&gt;175&lt;/td&gt;
-  &lt;td class="num"&gt;60&lt;/td&gt;
-  &lt;td class="num"&gt;14&lt;/td&gt;
-  &lt;td class="num"&gt;2&lt;/td&gt;
-  &lt;td class="num"&gt;12&lt;/td&gt;
-  &lt;td class="num"&gt;45&lt;/td&gt;
-  &lt;td class="num"&gt;8&lt;/td&gt;
-  &lt;td class="num"&gt;28&lt;/td&gt;
-  &lt;td class="num"&gt;32&lt;/td&gt;
-&lt;/tr&gt;</pre>
+    <div class="table-wrap">
+      <div class="table-title"><h2>Player Batting — 2026</h2></div>
+      <table id="offense-table">
+        <thead><tr>
+          <th>Player</th><th>Team</th><th>Cl</th><th>Pos</th><th>Flags</th>
+          <th class="num sorted">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
+          <th class="num">GP</th><th class="num">PA</th><th class="num">AB</th><th class="num">R</th>
+          <th class="num">H</th><th class="num">2B</th><th class="num">3B</th><th class="num">HR</th>
+          <th class="num">RBI</th><th class="num">HBP</th><th class="num">BB</th><th class="num">K</th>
+          <th class="num">SB</th><th class="num">CS</th>
+        </tr></thead>
+        <tbody id="offense-body"></tbody>
+      </table>
     </div>
   </div>
-
 </main>
 
 <footer>
@@ -135,5 +88,124 @@
   <span>Offense · 2026</span>
 </footer>
 
+<script>
+function fmt(v,d){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d);}
+function fmtAvg(v){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);if(isNaN(n)||n===0)return'—';return n.toFixed(3).replace(/^0/,'');}
+function fmtInt(v){if(v===null||v===undefined||v==='')return'—';const n=parseInt(v);return isNaN(n)?'—':n;}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function flag(v){return v&&v!==''&&v!=='0'&&v!==0&&v!==false;}
+
+function flagBadges(r){
+  let out='';
+  if(flag(r['Age Out']))   out+='<span class="badge badge-ao">AO</span>';
+  if(flag(r['Draft']))     out+='<span class="badge badge-dr">DR</span>';
+  if(flag(r['Transfer']))  out+='<span class="badge badge-tr">TR</span>';
+  if(flag(r['Performance']))out+='<span class="badge badge-pf">PF</span>';
+  return out||'<span style="color:var(--text-muted)">—</span>';
+}
+
+const sortState={};
+function makeTableSortable(tableId,renderFn){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.querySelectorAll('thead th').forEach((th,i)=>{
+    th.addEventListener('click',()=>{
+      const k=tableId+'-'+i;
+      sortState[k]=sortState[k]==='asc'?'desc':'asc';
+      table.querySelectorAll('thead th').forEach(h=>h.classList.remove('sorted-asc','sorted-desc'));
+      th.classList.add(sortState[k]==='asc'?'sorted-asc':'sorted-desc');
+      renderFn(i,sortState[k]);
+    });
+  });
+}
+
+function populateSelect(id,values){
+  const sel=document.getElementById(id);
+  if(!sel)return;
+  [...new Set(values.filter(Boolean))].sort().forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v;o.textContent=v;sel.appendChild(o);
+  });
+}
+
+async function loadData(){
+  try{
+    const resp=await fetch('/d1/data/2026_D1Baseball.xlsm');
+    if(!resp.ok)throw new Error('File not found ('+resp.status+'). Upload 2026_D1Baseball.xlsm to /d1/data/ in your repo.');
+    const buf=await resp.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const data=XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_roster_stats']);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    buildOffense(data);
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    const err=document.getElementById('error-msg');
+    err.style.display='block';
+    err.textContent='Error loading data: '+e.message;
+    document.getElementById('app').style.display='block';
+  }
+}
+
+function buildOffense(data){
+  const q=data.filter(r=>parseFloat(r.ba)>=0.2&&parseInt(r.gp)>=20);
+  const avgBA=q.reduce((s,r)=>s+parseFloat(r.ba||0),0)/(q.length||1);
+  const avgOPS=q.reduce((s,r)=>s+parseFloat(r.ops||0),0)/(q.length||1);
+  const totalHR=data.reduce((s,r)=>s+parseInt(r.hr||0),0);
+  document.getElementById('offense-summary-cards').innerHTML=`
+    <div class="stat-card"><div class="s-label">Players</div><div class="s-value">${data.length}</div><div class="s-sub">In dataset</div></div>
+    <div class="stat-card"><div class="s-label">Avg BA (qual.)</div><div class="s-value">${fmtAvg(avgBA)}</div><div class="s-sub">≥20 GP, BA ≥.200</div></div>
+    <div class="stat-card"><div class="s-label">Avg OPS (qual.)</div><div class="s-value">${fmt(avgOPS,3)}</div><div class="s-sub">Qualified hitters</div></div>
+    <div class="stat-card"><div class="s-label">Total HR</div><div class="s-value">${totalHR}</div><div class="s-sub">All players</div></div>`;
+  populateSelect('offense-pos-filter',data.map(r=>r.pos));
+  populateSelect('offense-class-filter',data.map(r=>r.class));
+  populateSelect('offense-team-filter',data.map(r=>r.team));
+
+  let sorted=[...data];
+  const keys=['player','team','class','pos',null,'ba','obp','slg','ops','gp','pa','ab','r','h','2b','3b','hr','rbi','hbp','bb','k','sb','cs'];
+  function render(ci,dir){
+    if(ci!==undefined){
+      const k=keys[ci];
+      if(k) sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
+    }
+    filterOffense(sorted);
+  }
+  ['offense-search','offense-pos-filter','offense-class-filter','offense-team-filter','offense-flag-filter']
+    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterOffense(sorted)));
+  makeTableSortable('offense-table',render);
+  filterOffense(sorted);
+}
+
+function filterOffense(data){
+  const q=document.getElementById('offense-search').value.toLowerCase();
+  const pos=document.getElementById('offense-pos-filter').value;
+  const cls=document.getElementById('offense-class-filter').value;
+  const team=document.getElementById('offense-team-filter').value;
+  const fl=document.getElementById('offense-flag-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.team||'').toLowerCase().includes(q))return false;
+    if(pos&&r.pos!==pos)return false;
+    if(cls&&r.class!==cls)return false;
+    if(team&&r.team!==team)return false;
+    if(fl==='ao'&&!flag(r['Age Out']))return false;
+    if(fl==='dr'&&!flag(r['Draft']))return false;
+    if(fl==='tr'&&!flag(r['Transfer']))return false;
+    if(fl==='pf'&&!flag(r['Performance']))return false;
+    return true;
+  });
+  document.getElementById('offense-count').textContent=f.length+' players';
+  document.getElementById('offense-body').innerHTML=f.map(r=>`<tr>
+    <td class="name">${esc(r.player)}</td><td>${esc(r.team)}</td><td>${esc(r.class)}</td><td>${esc(r.pos)}</td>
+    <td class="flags-cell">${flagBadges(r)}</td>
+    <td class="num">${fmtAvg(r.ba)}</td><td class="num">${fmtAvg(r.obp)}</td><td class="num">${fmtAvg(r.slg)}</td><td class="num">${fmtAvg(r.ops)}</td>
+    <td class="num">${fmtInt(r.gp)}</td><td class="num">${fmtInt(r.pa)}</td><td class="num">${fmtInt(r.ab)}</td><td class="num">${fmtInt(r.r)}</td>
+    <td class="num">${fmtInt(r.h)}</td><td class="num">${fmtInt(r['2b'])}</td><td class="num">${fmtInt(r['3b'])}</td><td class="num">${fmtInt(r.hr)}</td>
+    <td class="num">${fmtInt(r.rbi)}</td><td class="num">${fmtInt(r.hbp)}</td><td class="num">${fmtInt(r.bb)}</td><td class="num">${fmtInt(r.k)}</td>
+    <td class="num">${fmtInt(r.sb)}</td><td class="num">${fmtInt(r.cs)}</td>
+  </tr>`).join('');
+}
+
+loadData();
+</script>
 </body>
 </html>
