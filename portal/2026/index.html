@@ -30,6 +30,7 @@
     thead th[data-key] { cursor: pointer; }
     thead th[data-key]:hover { color: var(--text); }
     td.flags-cell { white-space: nowrap; min-width: 60px; }
+    .gs { border-left: 2px solid var(--text-muted); }
     .table-wrap { overflow-y: auto; max-height: calc(100vh - 400px); }
     thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); box-shadow: 0 1px 0 var(--border); }
     thead th.group-hdr { position: sticky; top: 0; z-index: 3; background: var(--bg); }
@@ -131,14 +132,14 @@
             <tr>
               <th class="group-hdr" rowspan="2" style="text-align:left">Team</th>
               <th class="group-hdr" rowspan="2" style="text-align:left">Conf.</th>
-              <th class="group-hdr" rowspan="2">Roster</th>
+              <th class="group-hdr gs" rowspan="2">Roster</th>
               <th class="group-hdr" colspan="10">Positions</th>
-              <th class="group-hdr" colspan="5">Class</th>
-              <th class="group-hdr" colspan="4">Age Out</th>
-              <th class="group-hdr" colspan="4">Draft</th>
-              <th class="group-hdr" colspan="4">Transfers</th>
-              <th class="group-hdr" colspan="4">Performance</th>
-              <th class="group-hdr" colspan="4">Remaining OF</th>
+              <th class="group-hdr gs" colspan="5">Class</th>
+              <th class="group-hdr gs" colspan="4">Age Out</th>
+              <th class="group-hdr gs" colspan="4">Draft</th>
+              <th class="group-hdr gs" colspan="4">Transfers</th>
+              <th class="group-hdr gs" colspan="4">Performance</th>
+              <th class="group-hdr gs" colspan="4">Remaining OF</th>
             </tr>
             <tr>
               <th class="num" data-key="C">C</th>
@@ -151,28 +152,28 @@
               <th class="num" data-key="RF_pos">RF</th>
               <th class="num" data-key="DH">DH</th>
               <th class="num" data-key="P">P</th>
-              <th class="num" data-key="FR">FR</th>
+              <th class="num gs" data-key="FR">FR</th>
               <th class="num" data-key="SO">SO</th>
               <th class="num" data-key="JR">JR</th>
               <th class="num" data-key="SR">SR</th>
               <th class="num" data-key="GR">GR</th>
-              <th class="num" data-key="AO_LF">LF</th>
+              <th class="num gs" data-key="AO_LF">LF</th>
               <th class="num" data-key="AO_CF">CF</th>
               <th class="num" data-key="AO_RF">RF</th>
               <th class="num" data-key="TOTAL AGE OUT">Total</th>
-              <th class="num" data-key="DR_LF">LF</th>
+              <th class="num gs" data-key="DR_LF">LF</th>
               <th class="num" data-key="DR_CF">CF</th>
               <th class="num" data-key="DR_RF">RF</th>
               <th class="num" data-key="TOTAL DRAFT">Total</th>
-              <th class="num" data-key="TR_LF">LF</th>
+              <th class="num gs" data-key="TR_LF">LF</th>
               <th class="num" data-key="TR_CF">CF</th>
               <th class="num" data-key="TR_RF">RF</th>
               <th class="num" data-key="TOTAL TRANSFERS">Total</th>
-              <th class="num" data-key="PF_LF">LF</th>
+              <th class="num gs" data-key="PF_LF">LF</th>
               <th class="num" data-key="PF_CF">CF</th>
               <th class="num" data-key="PF_RF">RF</th>
               <th class="num" data-key="TOTAL PERFORMANCE">Total</th>
-              <th class="num" data-key="Remaining LF">LF</th>
+              <th class="num gs" data-key="Remaining LF">LF</th>
               <th class="num" data-key="Remaining CF">CF</th>
               <th class="num" data-key="Remaining RF">RF</th>
               <th class="num" data-key="Remaining TOTAL OF">Total</th>
@@ -395,15 +396,15 @@ function filterSummary(data){
   document.getElementById('summary-count').textContent=f.length+' teams';
   document.getElementById('summary-body').innerHTML=f.map(r=>`<tr>
     <td class="name">${esc(r.Team)}</td><td>${esc(r.Conference)}</td>
-    <td class="num">${fmtInt(r['CURRENT ROSTER'])}</td>
+    <td class="num gs">${fmtInt(r['CURRENT ROSTER'])}</td>
     <td class="num">${fmtInt(r.C)}</td><td class="num">${fmtInt(r['1B'])}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.SS)}</td>
     <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td><td class="num">${fmtInt(r.P)}</td>
-    <td class="num">${fmtInt(r.FR)}</td><td class="num">${fmtInt(r.SO)}</td><td class="num">${fmtInt(r.JR)}</td><td class="num">${fmtInt(r.SR)}</td><td class="num">${fmtInt(r.GR)}</td>
-    <td class="num">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td>
-    <td class="num">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td>
-    <td class="num">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td>
-    <td class="num">${fmtInt(r.PF_LF)}</td><td class="num">${fmtInt(r.PF_CF)}</td><td class="num">${fmtInt(r.PF_RF)}</td><td class="num">${fmtInt(r['TOTAL PERFORMANCE'])}</td>
-    <td class="num">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
+    <td class="num gs">${fmtInt(r.FR)}</td><td class="num">${fmtInt(r.SO)}</td><td class="num">${fmtInt(r.JR)}</td><td class="num">${fmtInt(r.SR)}</td><td class="num">${fmtInt(r.GR)}</td>
+    <td class="num gs">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td>
+    <td class="num gs">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td>
+    <td class="num gs">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td>
+    <td class="num gs">${fmtInt(r.PF_LF)}</td><td class="num">${fmtInt(r.PF_CF)}</td><td class="num">${fmtInt(r.PF_RF)}</td><td class="num">${fmtInt(r['TOTAL PERFORMANCE'])}</td>
+    <td class="num gs">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
   </tr>`).join('');
 }
 
