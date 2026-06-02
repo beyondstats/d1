@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beyond Stats — D1 Baseball</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .hero {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 5rem 2.5rem 4rem;
+    }
+    .hero .eyebrow {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      max-width: 640px;
+      margin-bottom: 1rem;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 480px;
+      line-height: 1.7;
+    }
+    .section-title {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section { margin-bottom: 3rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/d1/">Beyond<span>Stats</span> · D1</a>
+  <ul class="nav-links">
+    <li><a href="/d1/" class="active">Home</a></li>
+    <li><a href="/d1/stats/offense/2026/">Offense</a></li>
+    <li><a href="/d1/stats/pitching/2026/">Pitching</a></li>
+    <li><a href="/d1/portal/2026/">Portal</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <div class="eyebrow">D1 Baseball Analytics</div>
+  <h1>Numbers that tell the <em>real</em> story.</h1>
+  <p>Advanced statistics, scouting analysis, and transfer portal tracking for Division I baseball.</p>
+</div>
+
+<main>
+
+  <section class="section">
+    <div class="section-title">Quick Stats — 2026 Season</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="s-label">Teams Tracked</div>
+        <div class="s-value">—</div>
+        <div class="s-sub">D1 programs</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Players</div>
+        <div class="s-value">—</div>
+        <div class="s-sub">Active roster entries</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Games</div>
+        <div class="s-value">—</div>
+        <div class="s-sub">2026 season</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-label">Portal Entries</div>
+        <div class="s-value">—</div>
+        <div class="s-sub">Transfer portal 2026</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Explore</div>
+    <div class="card-grid">
+      <a class="card" href="/d1/stats/offense/2026/">
+        <div class="c-label">Statistics · 2026</div>
+        <div class="c-title">Offensive Stats</div>
+        <div class="c-desc">Batting averages, OBP, slugging, wOBA, and advanced hitting metrics.</div>
+      </a>
+      <a class="card" href="/d1/stats/pitching/2026/">
+        <div class="c-label">Statistics · 2026</div>
+        <div class="c-title">Pitching Stats</div>
+        <div class="c-desc">ERA, WHIP, K/9, FIP, and advanced pitching analysis.</div>
+      </a>
+      <a class="card" href="/d1/portal/2026/">
+        <div class="c-label">Transfer Portal · 2026</div>
+        <div class="c-title">Portal Tracker</div>
+        <div class="c-desc">Transfer portal entries, destinations, and player analysis.</div>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>Beyond Stats · D1 Baseball</span>
+  <span>2026 Season</span>
+</footer>
+
+</body>
+</html>
