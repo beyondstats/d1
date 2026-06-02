@@ -3,8 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Transfer Portal 2026 — Beyond Stats D1</title>
+  <title>2026 D1 Baseball — Beyond Stats</title>
   <link rel="stylesheet" href="/d1/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .loading { padding: 3rem; text-align: center; font-family: var(--mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.08em; }
+    .error { padding: 1.5rem; background: #fff5f5; border: 1px solid #fcc; color: #c00; font-size: 0.85rem; margin-bottom: 1.5rem; font-family: var(--mono); }
+    .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+    .filter-bar input, .filter-bar select { font-family: var(--mono); font-size: 0.75rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; height: 32px; }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+    .filter-bar input { width: 200px; }
+    .badge { display: inline-block; font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.06em; padding: 0.2rem 0.5rem; border-radius: 2px; }
+    .badge-available { background: #e8f5e9; color: #2e7d32; }
+    .badge-committed { background: #e3f2fd; color: #1565c0; }
+    .badge-hs { background: #fff3e0; color: #e65100; }
+    .badge-college { background: #f3e5f5; color: #6a1b9a; }
+    .row-count { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); margin-left: auto; align-self: center; }
+    thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
+    thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+  </style>
 </head>
 <body>
 
@@ -13,117 +30,406 @@
   <ul class="nav-links">
     <li><a href="/d1/">Home</a></li>
     <li><a href="/d1/stats/offense/2026/">Offense</a></li>
-    <li><a href="/d1/stats/pitching/2026/">Pitching</a></li>
     <li><a href="/d1/portal/2026/" class="active">Portal</a></li>
   </ul>
 </nav>
 
 <div class="page-header">
-  <div class="label">Transfer Portal</div>
-  <h1>Portal Tracker</h1>
-  <div class="subtitle">Division I Baseball — 2026 transfer entries & analysis</div>
+  <div class="label">2026 Season</div>
+  <h1>D1 Baseball Analytics</h1>
+  <div class="subtitle">Offensive stats, transfer portal, draft prospects &amp; team summaries</div>
 </div>
 
 <main>
-
   <div class="year-bar">
-    <span class="year-label">Class</span>
+    <span class="year-label">Season</span>
     <a class="year-pill active" href="/d1/portal/2026/">2026</a>
   </div>
 
-  <div class="tabs">
-    <a class="tab active" href="#">All Entries</a>
-    <a class="tab" href="#">Pitchers</a>
-    <a class="tab" href="#">Position Players</a>
-    <a class="tab" href="#">Committed</a>
-  </div>
+  <div id="error-msg" class="error" style="display:none"></div>
+  <div id="loading" class="loading">Loading data…</div>
 
-  <div class="stat-grid">
-    <div class="stat-card">
-      <div class="s-label">Total Entries</div>
-      <div class="s-value">—</div>
-      <div class="s-sub">Portal entries</div>
+  <div id="app" style="display:none">
+    <div class="tabs">
+      <a class="tab active" href="#" data-tab="offense">Offensive Stats</a>
+      <a class="tab" href="#" data-tab="transfers">Transfer Portal</a>
+      <a class="tab" href="#" data-tab="draft">Draft Prospects</a>
+      <a class="tab" href="#" data-tab="summary">Team Summary</a>
+      <a class="tab" href="#" data-tab="conferences">Conferences &amp; Teams</a>
     </div>
-    <div class="stat-card">
-      <div class="s-label">Committed</div>
-      <div class="s-value">—</div>
-      <div class="s-sub">New destinations</div>
-    </div>
-    <div class="stat-card">
-      <div class="s-label">Still Available</div>
-      <div class="s-value">—</div>
-      <div class="s-sub">Uncommitted</div>
-    </div>
-    <div class="stat-card">
-      <div class="s-label">Pitchers</div>
-      <div class="s-value">—</div>
-      <div class="s-sub">Arms in portal</div>
-    </div>
-  </div>
 
-  <div class="table-wrap">
-    <div class="table-title">
-      <h2>Transfer Portal Entries — 2026</h2>
+    <!-- OFFENSE -->
+    <div id="tab-offense" class="tab-panel">
+      <div class="stat-grid" id="offense-summary-cards"></div>
+      <div class="filter-bar">
+        <input type="text" id="offense-search" placeholder="Search player or team…" />
+        <select id="offense-pos-filter"><option value="">All Positions</option></select>
+        <select id="offense-class-filter"><option value="">All Classes</option></select>
+        <select id="offense-team-filter"><option value="">All Teams</option></select>
+        <span class="row-count" id="offense-count"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title"><h2>Batting Stats — 2026</h2></div>
+        <table id="offense-table">
+          <thead><tr>
+            <th>Player</th><th>Team</th><th>Cl</th><th>Pos</th>
+            <th class="num">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
+            <th class="num">GP</th><th class="num">PA</th><th class="num">AB</th><th class="num">R</th>
+            <th class="num">H</th><th class="num">2B</th><th class="num">3B</th><th class="num">HR</th>
+            <th class="num">RBI</th><th class="num">BB</th><th class="num">K</th><th class="num">SB</th>
+          </tr></thead>
+          <tbody id="offense-body"></tbody>
+        </table>
+      </div>
     </div>
-    <table id="portal-table">
-      <thead>
-        <tr>
-          <th>Player</th>
-          <th>Pos</th>
-          <th>Yr</th>
-          <th>From</th>
-          <th>To</th>
-          <th>Status</th>
-          <th class="num">AVG</th>
-          <th class="num">OPS</th>
-          <th class="num">HR</th>
-          <th class="num">ERA</th>
-          <th class="num">K/9</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="name" colspan="12" style="color:var(--text-muted);font-style:italic;text-align:center;padding:2rem;">
-            Upload your data to populate this table — see instructions below.
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
 
-  <div class="table-wrap">
-    <div class="table-title">
-      <h2>How to add data</h2>
+    <!-- TRANSFERS -->
+    <div id="tab-transfers" class="tab-panel" style="display:none">
+      <div class="stat-grid" id="transfer-summary-cards"></div>
+      <div class="filter-bar">
+        <input type="text" id="transfer-search" placeholder="Search player or school…" />
+        <select id="transfer-pos-filter"><option value="">All Positions</option></select>
+        <select id="transfer-conf-filter"><option value="">All Conferences</option></select>
+        <select id="transfer-status-filter">
+          <option value="">All</option>
+          <option value="available">Available</option>
+          <option value="committed">Committed</option>
+        </select>
+        <span class="row-count" id="transfer-count"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title"><h2>Transfer Portal — 2026</h2></div>
+        <table id="transfer-table">
+          <thead><tr>
+            <th>Player</th><th>Pos</th><th>Cl</th><th>From</th><th>Conference</th>
+            <th>To</th><th>Status</th>
+            <th class="num">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
+            <th class="num">GP</th><th class="num">HR</th><th class="num">RBI</th><th class="num">SB</th>
+          </tr></thead>
+          <tbody id="transfer-body"></tbody>
+        </table>
+      </div>
     </div>
-    <div style="padding:1.25rem 1.5rem;font-size:0.85rem;color:var(--text-muted);line-height:1.8;">
-      <p>To populate this table, replace the placeholder <code>&lt;tbody&gt;</code> rows above with your data. Each row follows this pattern:</p>
-      <br/>
-      <pre style="background:var(--bg);padding:1rem;font-family:var(--mono);font-size:0.75rem;overflow-x:auto;border:1px solid var(--border);">&lt;tr&gt;
-  &lt;td class="name"&gt;Last, First&lt;/td&gt;
-  &lt;td&gt;RHP&lt;/td&gt;
-  &lt;td&gt;Jr&lt;/td&gt;
-  &lt;td&gt;Previous School&lt;/td&gt;
-  &lt;td&gt;New School&lt;/td&gt;
-  &lt;td&gt;&lt;span class="highlight"&gt;Committed&lt;/span&gt;&lt;/td&gt;
-  &lt;td class="num"&gt;—&lt;/td&gt;
-  &lt;td class="num"&gt;—&lt;/td&gt;
-  &lt;td class="num"&gt;—&lt;/td&gt;
-  &lt;td class="num"&gt;2.80&lt;/td&gt;
-  &lt;td class="num"&gt;11.2&lt;/td&gt;
-  &lt;td&gt;Elite arm, 94 mph avg&lt;/td&gt;
-&lt;/tr&gt;</pre>
-      <br/>
-      <p>For the Status field, wrap text in <code>&lt;span class="highlight"&gt;&lt;/span&gt;</code> to highlight committed players in red.</p>
-    </div>
-  </div>
 
+    <!-- DRAFT -->
+    <div id="tab-draft" class="tab-panel" style="display:none">
+      <div class="filter-bar">
+        <input type="text" id="draft-search" placeholder="Search player or school…" />
+        <select id="draft-pos-filter"><option value="">All Positions</option></select>
+        <select id="draft-type-filter">
+          <option value="">All</option>
+          <option value="College">College</option>
+          <option value="High School">High School</option>
+        </select>
+        <span class="row-count" id="draft-count"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title"><h2>Draft Prospects — 2026</h2></div>
+        <table id="draft-table">
+          <thead><tr>
+            <th class="num">Rank</th><th>Player</th><th>Pos</th><th>School</th><th>Level</th>
+          </tr></thead>
+          <tbody id="draft-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div id="tab-summary" class="tab-panel" style="display:none">
+      <div class="filter-bar">
+        <input type="text" id="summary-search" placeholder="Search team or conference…" />
+        <select id="summary-conf-filter"><option value="">All Conferences</option></select>
+        <span class="row-count" id="summary-count"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title"><h2>Team Summary — 2026</h2></div>
+        <table id="summary-table">
+          <thead><tr>
+            <th>Team</th><th>Conference</th>
+            <th class="num">Roster</th>
+            <th class="num">FR</th><th class="num">SO</th><th class="num">JR</th><th class="num">SR</th><th class="num">GR</th>
+            <th class="num">Age Out</th><th class="num">Draft</th><th class="num">Transfers</th><th class="num">Perf.</th>
+            <th class="num">Remaining</th>
+          </tr></thead>
+          <tbody id="summary-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONFERENCES -->
+    <div id="tab-conferences" class="tab-panel" style="display:none">
+      <div class="filter-bar">
+        <input type="text" id="conf-search" placeholder="Search conference or team…" />
+        <span class="row-count" id="conf-count"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title"><h2>Conferences &amp; Teams</h2></div>
+        <table id="conf-table">
+          <thead><tr><th>Conference</th><th>Team</th></tr></thead>
+          <tbody id="conf-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
 </main>
 
 <footer>
   <span>Beyond Stats · D1 Baseball</span>
-  <span>Transfer Portal · 2026</span>
+  <span>2026 Season</span>
 </footer>
 
+<script>
+function fmt(v,d){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d);}
+function fmtAvg(v){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);if(isNaN(n)||n===0)return'—';return n.toFixed(3).replace(/^0/,'');}
+function fmtInt(v){if(v===null||v===undefined||v==='')return'—';const n=parseInt(v);return isNaN(n)?'—':n;}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+const sortState={};
+function makeTableSortable(tableId,renderFn){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.querySelectorAll('thead th').forEach((th,i)=>{
+    th.addEventListener('click',()=>{
+      const k=tableId+'-'+i;
+      sortState[k]=sortState[k]==='asc'?'desc':'asc';
+      table.querySelectorAll('thead th').forEach(h=>{h.classList.remove('sorted-asc','sorted-desc');});
+      th.classList.add(sortState[k]==='asc'?'sorted-asc':'sorted-desc');
+      renderFn(i,sortState[k]);
+    });
+  });
+}
+
+function populateSelect(id,values){
+  const sel=document.getElementById(id);
+  if(!sel)return;
+  [...new Set(values.filter(Boolean))].sort().forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v;o.textContent=v;sel.appendChild(o);
+  });
+}
+
+async function loadData(){
+  try{
+    const resp=await fetch('/d1/data/2026_D1Baseball.xlsm');
+    if(!resp.ok)throw new Error('File not found ('+resp.status+'). Upload your Excel file to /d1/data/2026_D1Baseball.xlsm in your repo.');
+    const buf=await resp.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const offenseData  =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_roster_stats']);
+    const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers']);
+    const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
+    const confData     =XLSX.utils.sheet_to_json(wb.Sheets['Conferences and Teams']);
+    const summaryData  =XLSX.utils.sheet_to_json(wb.Sheets['Summary']);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    buildOffense(offenseData);
+    buildTransfers(transferData);
+    buildDraft(draftData);
+    buildSummary(summaryData);
+    buildConferences(confData);
+    setupTabs();
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    const err=document.getElementById('error-msg');
+    err.style.display='block';
+    err.textContent='Error loading data: '+e.message;
+    document.getElementById('app').style.display='block';
+    setupTabs();
+  }
+}
+
+function buildOffense(data){
+  const q=data.filter(r=>parseFloat(r.ba)>=0.2&&parseInt(r.gp)>=20);
+  const avgBA=q.reduce((s,r)=>s+parseFloat(r.ba||0),0)/(q.length||1);
+  const avgOPS=q.reduce((s,r)=>s+parseFloat(r.ops||0),0)/(q.length||1);
+  const totalHR=data.reduce((s,r)=>s+parseInt(r.hr||0),0);
+  document.getElementById('offense-summary-cards').innerHTML=`
+    <div class="stat-card"><div class="s-label">Players</div><div class="s-value">${data.length}</div><div class="s-sub">In dataset</div></div>
+    <div class="stat-card"><div class="s-label">Avg BA (qual.)</div><div class="s-value">${fmtAvg(avgBA)}</div><div class="s-sub">≥20 GP, BA ≥.200</div></div>
+    <div class="stat-card"><div class="s-label">Avg OPS (qual.)</div><div class="s-value">${fmt(avgOPS,3)}</div><div class="s-sub">Qualified hitters</div></div>
+    <div class="stat-card"><div class="s-label">Total HR</div><div class="s-value">${totalHR}</div><div class="s-sub">All players</div></div>`;
+  populateSelect('offense-pos-filter',data.map(r=>r.pos));
+  populateSelect('offense-class-filter',data.map(r=>r.class));
+  populateSelect('offense-team-filter',data.map(r=>r.team));
+  let sorted=[...data];
+  const keys=['player','team','class','pos','ba','obp','slg','ops','gp','pa','ab','r','h','2b','3b','hr','rbi','bb','k','sb'];
+  function render(ci,dir){
+    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    filterOffense(sorted);
+  }
+  ['offense-search','offense-pos-filter','offense-class-filter','offense-team-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterOffense(sorted)));
+  makeTableSortable('offense-table',render);
+  filterOffense(sorted);
+}
+function filterOffense(data){
+  const q=document.getElementById('offense-search').value.toLowerCase();
+  const pos=document.getElementById('offense-pos-filter').value;
+  const cls=document.getElementById('offense-class-filter').value;
+  const team=document.getElementById('offense-team-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.team||'').toLowerCase().includes(q))return false;
+    if(pos&&r.pos!==pos)return false;
+    if(cls&&r.class!==cls)return false;
+    if(team&&r.team!==team)return false;
+    return true;
+  });
+  document.getElementById('offense-count').textContent=f.length+' players';
+  document.getElementById('offense-body').innerHTML=f.map(r=>`<tr>
+    <td class="name">${esc(r.player)}</td><td>${esc(r.team)}</td><td>${esc(r.class)}</td><td>${esc(r.pos)}</td>
+    <td class="num">${fmtAvg(r.ba)}</td><td class="num">${fmtAvg(r.obp)}</td><td class="num">${fmtAvg(r.slg)}</td><td class="num">${fmtAvg(r.ops)}</td>
+    <td class="num">${fmtInt(r.gp)}</td><td class="num">${fmtInt(r.pa)}</td><td class="num">${fmtInt(r.ab)}</td><td class="num">${fmtInt(r.r)}</td>
+    <td class="num">${fmtInt(r.h)}</td><td class="num">${fmtInt(r['2b'])}</td><td class="num">${fmtInt(r['3b'])}</td><td class="num">${fmtInt(r.hr)}</td>
+    <td class="num">${fmtInt(r.rbi)}</td><td class="num">${fmtInt(r.bb)}</td><td class="num">${fmtInt(r.k)}</td><td class="num">${fmtInt(r.sb)}</td>
+  </tr>`).join('');
+}
+
+function buildTransfers(data){
+  const avail=data.filter(r=>!r.to_school||r.to_school==='--').length;
+  const pitch=data.filter(r=>String(r.pos||'').includes('P')).length;
+  document.getElementById('transfer-summary-cards').innerHTML=`
+    <div class="stat-card"><div class="s-label">Total Entries</div><div class="s-value">${data.length}</div><div class="s-sub">In portal</div></div>
+    <div class="stat-card"><div class="s-label">Available</div><div class="s-value">${avail}</div><div class="s-sub">Not yet committed</div></div>
+    <div class="stat-card"><div class="s-label">Committed</div><div class="s-value">${data.length-avail}</div><div class="s-sub">New destination</div></div>
+    <div class="stat-card"><div class="s-label">Pitchers</div><div class="s-value">${pitch}</div><div class="s-sub">Arms in portal</div></div>`;
+  populateSelect('transfer-pos-filter',data.map(r=>r.pos));
+  populateSelect('transfer-conf-filter',data.map(r=>r.Conference));
+  let sorted=[...data];
+  const keys=['player','pos','class','from_school','Conference','to_school','_status','BA','OBP','SLG','OPS','GP','HR','RBI','SB'];
+  function render(ci,dir){
+    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    filterTransfers(sorted);
+  }
+  ['transfer-search','transfer-pos-filter','transfer-conf-filter','transfer-status-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterTransfers(sorted)));
+  makeTableSortable('transfer-table',render);
+  filterTransfers(sorted);
+}
+function filterTransfers(data){
+  const q=document.getElementById('transfer-search').value.toLowerCase();
+  const pos=document.getElementById('transfer-pos-filter').value;
+  const conf=document.getElementById('transfer-conf-filter').value;
+  const status=document.getElementById('transfer-status-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.from_school||'').toLowerCase().includes(q)&&!String(r.to_school||'').toLowerCase().includes(q))return false;
+    if(pos&&r.pos!==pos)return false;
+    if(conf&&r.Conference!==conf)return false;
+    const isAvail=!r.to_school||r.to_school==='--';
+    if(status==='available'&&!isAvail)return false;
+    if(status==='committed'&&isAvail)return false;
+    return true;
+  });
+  document.getElementById('transfer-count').textContent=f.length+' players';
+  document.getElementById('transfer-body').innerHTML=f.map(r=>{
+    const isAvail=!r.to_school||r.to_school==='--';
+    return`<tr>
+      <td class="name">${esc(r.player)}</td><td>${esc(r.pos)}</td><td>${esc(r.class)}</td>
+      <td>${esc(r.from_school)}</td><td>${esc(r.Conference)}</td>
+      <td>${isAvail?'<span style="color:var(--text-muted)">—</span>':esc(r.to_school)}</td>
+      <td>${isAvail?'<span class="badge badge-available">Available</span>':'<span class="badge badge-committed">Committed</span>'}</td>
+      <td class="num">${fmtAvg(r.BA)}</td><td class="num">${fmtAvg(r.OBP)}</td><td class="num">${fmtAvg(r.SLG)}</td><td class="num">${fmtAvg(r.OPS)}</td>
+      <td class="num">${fmtInt(r.GP)}</td><td class="num">${fmtInt(r.HR)}</td><td class="num">${fmtInt(r.RBI)}</td><td class="num">${fmtInt(r.SB)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function buildDraft(data){
+  populateSelect('draft-pos-filter',data.map(r=>r.Position));
+  let sorted=[...data];
+  const keys=['3/4 Rank','Player','Position','School','College / High School'];
+  function render(ci,dir){
+    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    filterDraft(sorted);
+  }
+  ['draft-search','draft-pos-filter','draft-type-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterDraft(sorted)));
+  makeTableSortable('draft-table',render);
+  filterDraft(sorted);
+}
+function filterDraft(data){
+  const q=document.getElementById('draft-search').value.toLowerCase();
+  const pos=document.getElementById('draft-pos-filter').value;
+  const type=document.getElementById('draft-type-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.Player||'').toLowerCase().includes(q)&&!String(r.School||'').toLowerCase().includes(q))return false;
+    if(pos&&r.Position!==pos)return false;
+    if(type&&r['College / High School']!==type)return false;
+    return true;
+  });
+  document.getElementById('draft-count').textContent=f.length+' prospects';
+  document.getElementById('draft-body').innerHTML=f.map(r=>{
+    const isHS=r['College / High School']==='High School';
+    return`<tr>
+      <td class="num">${fmtInt(r['3/4 Rank'])}</td>
+      <td class="name">${esc(r.Player)}</td>
+      <td>${esc(r.Position)}</td>
+      <td>${esc(r.School)}</td>
+      <td>${isHS?'<span class="badge badge-hs">High School</span>':'<span class="badge badge-college">College</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function buildSummary(data){
+  populateSelect('summary-conf-filter',data.map(r=>r.Conference));
+  let sorted=[...data];
+  const keys=['Team','Conference','CURRENT ROSTER','FR','SO','JR','SR','GR','TOTAL AGE OUT','TOTAL DRAFT','TOTAL TRANSFERS','TOTAL PERFORMANCE','Remaining LF'];
+  function render(ci,dir){
+    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    filterSummary(sorted);
+  }
+  ['summary-search','summary-conf-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterSummary(sorted)));
+  makeTableSortable('summary-table',render);
+  filterSummary(sorted);
+}
+function filterSummary(data){
+  const q=document.getElementById('summary-search').value.toLowerCase();
+  const conf=document.getElementById('summary-conf-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.Team||'').toLowerCase().includes(q)&&!String(r.Conference||'').toLowerCase().includes(q))return false;
+    if(conf&&r.Conference!==conf)return false;
+    return true;
+  });
+  document.getElementById('summary-count').textContent=f.length+' teams';
+  document.getElementById('summary-body').innerHTML=f.map(r=>`<tr>
+    <td class="name">${esc(r.Team)}</td><td>${esc(r.Conference)}</td>
+    <td class="num">${fmtInt(r['CURRENT ROSTER'])}</td>
+    <td class="num">${fmtInt(r.FR)}</td><td class="num">${fmtInt(r.SO)}</td><td class="num">${fmtInt(r.JR)}</td><td class="num">${fmtInt(r.SR)}</td><td class="num">${fmtInt(r.GR)}</td>
+    <td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td><td class="num">${fmtInt(r['TOTAL PERFORMANCE'])}</td>
+    <td class="num">${fmtInt(r['Remaining LF'])}</td>
+  </tr>`).join('');
+}
+
+function buildConferences(data){
+  let sorted=[...data];
+  function render(ci,dir){
+    if(ci!==undefined){const keys=['Conference','Team'];const k=keys[ci];sorted.sort((a,b)=>{const av=a[k]||'';const bv=b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    filterConferences(sorted);
+  }
+  document.getElementById('conf-search').addEventListener('input',()=>filterConferences(sorted));
+  makeTableSortable('conf-table',render);
+  filterConferences(sorted);
+}
+function filterConferences(data){
+  const q=document.getElementById('conf-search').value.toLowerCase();
+  const f=data.filter(r=>{
+    if(q&&!String(r.Conference||'').toLowerCase().includes(q)&&!String(r.Team||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  document.getElementById('conf-count').textContent=f.length+' teams';
+  document.getElementById('conf-body').innerHTML=f.map(r=>`<tr><td>${esc(r.Conference)}</td><td class="name">${esc(r.Team)}</td></tr>`).join('');
+}
+
+function setupTabs(){
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',e=>{
+      e.preventDefault();
+      const target=tab.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+      tab.classList.add('active');
+      document.getElementById('tab-'+target).style.display='block';
+    });
+  });
+}
+
+loadData();
+</script>
 </body>
 </html>
