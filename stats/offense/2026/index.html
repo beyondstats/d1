@@ -51,7 +51,6 @@
   <div id="loading" class="loading">Loading data…</div>
 
   <div id="app" style="display:none">
-    <div class="stat-grid" id="offense-summary-cards"></div>
     <div class="filter-bar">
       <input type="text" id="offense-search" placeholder="Search player or team…" />
       <select id="offense-pos-filter"><option value="">All Positions</option></select>
@@ -148,15 +147,6 @@ async function loadData(){
 }
 
 function buildOffense(data){
-  const q=data.filter(r=>parseFloat(r.ba)>=0.2&&parseInt(r.gp)>=20);
-  const avgBA=q.reduce((s,r)=>s+parseFloat(r.ba||0),0)/(q.length||1);
-  const avgOPS=q.reduce((s,r)=>s+parseFloat(r.ops||0),0)/(q.length||1);
-  const totalHR=data.reduce((s,r)=>s+parseInt(r.hr||0),0);
-  document.getElementById('offense-summary-cards').innerHTML=`
-    <div class="stat-card"><div class="s-label">Players</div><div class="s-value">${data.length}</div><div class="s-sub">In dataset</div></div>
-    <div class="stat-card"><div class="s-label">Avg BA (qual.)</div><div class="s-value">${fmtAvg(avgBA)}</div><div class="s-sub">≥20 GP, BA ≥.200</div></div>
-    <div class="stat-card"><div class="s-label">Avg OPS (qual.)</div><div class="s-value">${fmt(avgOPS,3)}</div><div class="s-sub">Qualified hitters</div></div>
-    <div class="stat-card"><div class="s-label">Total HR</div><div class="s-value">${totalHR}</div><div class="s-sub">All players</div></div>`;
   populateSelect('offense-pos-filter',data.map(r=>r.pos));
   populateSelect('offense-class-filter',data.map(r=>r.class));
   populateSelect('offense-team-filter',data.map(r=>r.team));
