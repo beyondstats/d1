@@ -22,6 +22,8 @@
     thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
     thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
     td.flags-cell { white-space: nowrap; min-width: 60px; }
+    .table-wrap { overflow-y: auto; max-height: calc(100vh - 280px); }
+    thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); box-shadow: 0 1px 0 var(--border); }
   </style>
 </head>
 <body>
@@ -34,7 +36,7 @@
     <li><a href="/d1/portal/2026/">Portal</a></li>
   </ul>
 </nav>
-  
+
 <main>
   <div class="year-bar">
     <span class="year-label">Season</span>
