@@ -30,6 +30,10 @@
     thead th[data-key] { cursor: pointer; }
     thead th[data-key]:hover { color: var(--text); }
     td.flags-cell { white-space: nowrap; min-width: 60px; }
+    .table-wrap { overflow-y: auto; max-height: calc(100vh - 400px); }
+    thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); box-shadow: 0 1px 0 var(--border); }
+    thead th.group-hdr { position: sticky; top: 0; z-index: 3; background: var(--bg); }
+    #summary-table thead tr:nth-child(2) th { top: 27px; z-index: 2; }
   </style>
 </head>
 <body>
@@ -78,7 +82,7 @@
         <table id="transfer-table">
           <thead><tr>
             <th>Player</th><th>Pos</th><th>Cl</th><th>From</th><th>Conference</th>
-            <th>To</th><th>Status</th><th>Date</th>
+            <th>To</th><th>Status</th>
             <th class="num">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
             <th class="num">GP</th><th class="num">PA</th><th class="num">AB</th><th class="num">R</th>
             <th class="num">H</th><th class="num">2B</th><th class="num">3B</th><th class="num">HR</th>
@@ -191,7 +195,6 @@
 function fmt(v,d){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d);}
 function fmtAvg(v){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);if(isNaN(n)||n===0)return'—';return n.toFixed(3).replace(/^0/,'');}
 function fmtInt(v){if(v===null||v===undefined||v==='')return'—';const n=parseInt(v);return isNaN(n)?'—':n;}
-function fmtDate(v){if(!v)return'—';if(v instanceof Date&&!isNaN(v))return v.toLocaleDateString('en-US',{month:'short',day:'numeric'});return'—';}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 const sortState={};
@@ -238,9 +241,9 @@ async function loadData(){
     const resp=await fetch('/d1/data/2026_D1Baseball.xlsm');
     if(!resp.ok)throw new Error('File not found ('+resp.status+'). Upload your Excel file to /d1/data/2026_D1Baseball.xlsm in your repo.');
     const buf=await resp.arrayBuffer();
-    const wb=XLSX.read(buf,{type:'array',cellDates:true});
+    const wb=XLSX.read(buf,{type:'array'});
 
-    const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers'],{cellDates:true});
+    const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers']);
     const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
 
     // Summary has duplicate column names (LF/CF/RF repeat per category) — read as raw array and map by index
@@ -287,13 +290,12 @@ function buildTransfers(data){
   populateSelect('transfer-conf-filter',data.map(r=>r.Conference));
 
   let sorted=[...data];
-  // Player(0) Pos(1) Cl(2) From(3) Conf(4) To(5) Status(6) Date(7) AVG(8) OBP(9) SLG(10) OPS(11) GP(12) PA(13) AB(14) R(15) H(16) 2B(17) 3B(18) HR(19) RBI(20) HBP(21) BB(22) K(23) SB(24) CS(25)
-  const keys=['player','pos','class','from_school','Conference','to_school','_status','date_entered','BA','OBP','SLG','OPS','GP','PA','AB','R','H','2B','3B','HR','RBI','HBP','BB','K','SB','CS'];
+  // Player(0) Pos(1) Cl(2) From(3) Conf(4) To(5) Status(6) AVG(7) OBP(8) SLG(9) OPS(10) GP(11) PA(12) AB(13) R(14) H(15) 2B(16) 3B(17) HR(18) RBI(19) HBP(20) BB(21) K(22) SB(23) CS(24)
+  const keys=['player','pos','class','from_school','Conference','to_school','_status','BA','OBP','SLG','OPS','GP','PA','AB','R','H','2B','3B','HR','RBI','HBP','BB','K','SB','CS'];
   function render(ci,dir){
     if(ci!==undefined){
       const k=keys[ci];
-      if(k&&k!=='_status'&&k!=='date_entered') sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
-      if(k==='date_entered') sorted.sort((a,b)=>{const av=a[k]?a[k].getTime():0;const bv=b[k]?b[k].getTime():0;return dir==='asc'?av-bv:bv-av;});
+      if(k&&k!=='_status') sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
     }
     filterTransfers(sorted);
   }
@@ -325,7 +327,6 @@ function filterTransfers(data){
       <td>${esc(r.from_school)}</td><td>${esc(r.Conference)}</td>
       <td>${isAvail?'<span style="color:var(--text-muted)">—</span>':esc(r.to_school)}</td>
       <td>${isAvail?'<span class="badge badge-available">Available</span>':'<span class="badge badge-committed">Committed</span>'}</td>
-      <td>${fmtDate(r.date_entered)}</td>
       <td class="num">${fmtAvg(r.BA)}</td><td class="num">${fmtAvg(r.OBP)}</td><td class="num">${fmtAvg(r.SLG)}</td><td class="num">${fmtAvg(r.OPS)}</td>
       <td class="num">${fmtInt(r.GP)}</td><td class="num">${fmtInt(r.PA)}</td><td class="num">${fmtInt(r.AB)}</td><td class="num">${fmtInt(r.R)}</td>
       <td class="num">${fmtInt(r.H)}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.HR)}</td>
