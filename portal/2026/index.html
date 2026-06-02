@@ -71,6 +71,7 @@
         <input type="text" id="transfer-search" placeholder="Search player or school…" />
         <select id="transfer-pos-filter"><option value="">All Positions</option></select>
         <select id="transfer-conf-filter"><option value="">All Conferences</option></select>
+        <select id="transfer-school-filter"><option value="">All Schools</option></select>
         <select id="transfer-status-filter">
           <option value="">All</option>
           <option value="available">Available</option>
@@ -283,6 +284,7 @@ function buildTransfers(data){
     <div class="stat-card"><div class="s-label">Pitchers</div><div class="s-value">${pitch}</div><div class="s-sub">Arms in portal</div></div>`;
   populateSelect('transfer-pos-filter',data.map(r=>r.pos));
   populateSelect('transfer-conf-filter',data.map(r=>r.Conference));
+  populateSelect('transfer-school-filter',data.map(r=>r.from_school));
 
   let sorted=[...data];
   // Player(0) Pos(1) Cl(2) From(3) Conf(4) To(5) Status(6) AVG(7) OBP(8) SLG(9) OPS(10) GP(11) PA(12) AB(13) R(14) H(15) 2B(16) 3B(17) HR(18) RBI(19) HBP(20) BB(21) K(22) SB(23) CS(24)
@@ -294,7 +296,7 @@ function buildTransfers(data){
     }
     filterTransfers(sorted);
   }
-  ['transfer-search','transfer-pos-filter','transfer-conf-filter','transfer-status-filter']
+  ['transfer-search','transfer-pos-filter','transfer-conf-filter','transfer-school-filter','transfer-status-filter']
     .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterTransfers(sorted)));
   makeTableSortable('transfer-table',render);
   filterTransfers(sorted);
@@ -304,11 +306,13 @@ function filterTransfers(data){
   const q=document.getElementById('transfer-search').value.toLowerCase();
   const pos=document.getElementById('transfer-pos-filter').value;
   const conf=document.getElementById('transfer-conf-filter').value;
+  const school=document.getElementById('transfer-school-filter').value;
   const status=document.getElementById('transfer-status-filter').value;
   const f=data.filter(r=>{
     if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.from_school||'').toLowerCase().includes(q)&&!String(r.to_school||'').toLowerCase().includes(q))return false;
     if(pos&&r.pos!==pos)return false;
     if(conf&&r.Conference!==conf)return false;
+    if(school&&r.from_school!==school)return false;
     const isAvail=!r.to_school||r.to_school==='--';
     if(status==='available'&&!isAvail)return false;
     if(status==='committed'&&isAvail)return false;
