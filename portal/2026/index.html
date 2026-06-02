@@ -134,7 +134,6 @@
               <th class="group-hdr" rowspan="2" style="text-align:left">Conf.</th>
               <th class="group-hdr gs" rowspan="2">Roster</th>
               <th class="group-hdr" colspan="10">Positions</th>
-              <th class="group-hdr gs" colspan="5">Class</th>
               <th class="group-hdr gs" colspan="4">Age Out</th>
               <th class="group-hdr gs" colspan="4">Draft</th>
               <th class="group-hdr gs" colspan="4">Transfers</th>
@@ -152,11 +151,6 @@
               <th class="num" data-key="RF_pos">RF</th>
               <th class="num" data-key="DH">DH</th>
               <th class="num" data-key="P">P</th>
-              <th class="num gs" data-key="FR">FR</th>
-              <th class="num" data-key="SO">SO</th>
-              <th class="num" data-key="JR">JR</th>
-              <th class="num" data-key="SR">SR</th>
-              <th class="num" data-key="GR">GR</th>
               <th class="num gs" data-key="AO_LF">LF</th>
               <th class="num" data-key="AO_CF">CF</th>
               <th class="num" data-key="AO_RF">RF</th>
@@ -399,7 +393,6 @@ function filterSummary(data){
     <td class="num gs">${fmtInt(r['CURRENT ROSTER'])}</td>
     <td class="num">${fmtInt(r.C)}</td><td class="num">${fmtInt(r['1B'])}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.SS)}</td>
     <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td><td class="num">${fmtInt(r.P)}</td>
-    <td class="num gs">${fmtInt(r.FR)}</td><td class="num">${fmtInt(r.SO)}</td><td class="num">${fmtInt(r.JR)}</td><td class="num">${fmtInt(r.SR)}</td><td class="num">${fmtInt(r.GR)}</td>
     <td class="num gs">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td>
     <td class="num gs">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td>
     <td class="num gs">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td>
