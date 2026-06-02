@@ -105,9 +105,9 @@ nav {
 
 /* MAIN */
 main {
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
-  padding: 2.5rem 2.5rem;
+  padding: 2.5rem 2rem;
 }
 
 /* YEAR SELECTOR */
@@ -219,7 +219,7 @@ thead th {
   text-transform: uppercase;
   color: var(--text-muted);
   font-weight: 500;
-  padding: 0.65rem 1rem;
+  padding: 0.55rem 0.7rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
@@ -244,7 +244,7 @@ tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--accent-light); }
 
 tbody td {
-  padding: 0.65rem 1rem;
+  padding: 0.55rem 0.7rem;
   white-space: nowrap;
 }
 
