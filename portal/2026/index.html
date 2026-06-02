@@ -46,7 +46,7 @@
 <div class="page-header">
   <div class="label">2026 Season</div>
   <h1>D1 Baseball Analytics</h1>
-  <div class="subtitle">Offensive stats, transfer portal, draft prospects &amp; team summaries</div>
+  <div class="subtitle">Transfer portal, draft prospects &amp; team summaries · 2026 Season</div>
 </div>
 
 <main>
@@ -60,48 +60,13 @@
 
   <div id="app" style="display:none">
     <div class="tabs">
-      <a class="tab active" href="#" data-tab="offense">Offensive Stats</a>
-      <a class="tab" href="#" data-tab="transfers">Transfer Portal</a>
+      <a class="tab active" href="#" data-tab="transfers">Transfer Portal</a>
       <a class="tab" href="#" data-tab="draft">Draft Prospects</a>
       <a class="tab" href="#" data-tab="summary">Team Summary</a>
-      <a class="tab" href="#" data-tab="conferences">Conferences &amp; Teams</a>
-    </div>
-
-    <!-- OFFENSE -->
-    <div id="tab-offense" class="tab-panel">
-      <div class="stat-grid" id="offense-summary-cards"></div>
-      <div class="filter-bar">
-        <input type="text" id="offense-search" placeholder="Search player or team…" />
-        <select id="offense-pos-filter"><option value="">All Positions</option></select>
-        <select id="offense-class-filter"><option value="">All Classes</option></select>
-        <select id="offense-team-filter"><option value="">All Teams</option></select>
-        <select id="offense-flag-filter">
-          <option value="">All Players</option>
-          <option value="ao">Age Out</option>
-          <option value="dr">Draft Prospect</option>
-          <option value="tr">In Transfer Portal</option>
-          <option value="pf">Performance Flag</option>
-        </select>
-        <span class="row-count" id="offense-count"></span>
-      </div>
-      <div class="table-wrap">
-        <div class="table-title"><h2>Batting Stats — 2026</h2></div>
-        <table id="offense-table">
-          <thead><tr>
-            <th>Player</th><th>Team</th><th>Cl</th><th>Pos</th><th>Flags</th>
-            <th class="num sorted">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
-            <th class="num">GP</th><th class="num">PA</th><th class="num">AB</th><th class="num">R</th>
-            <th class="num">H</th><th class="num">2B</th><th class="num">3B</th><th class="num">HR</th>
-            <th class="num">RBI</th><th class="num">HBP</th><th class="num">BB</th><th class="num">K</th>
-            <th class="num">SB</th><th class="num">CS</th>
-          </tr></thead>
-          <tbody id="offense-body"></tbody>
-        </table>
-      </div>
     </div>
 
     <!-- TRANSFERS -->
-    <div id="tab-transfers" class="tab-panel" style="display:none">
+    <div id="tab-transfers" class="tab-panel">
       <div class="stat-grid" id="transfer-summary-cards"></div>
       <div class="filter-bar">
         <input type="text" id="transfer-search" placeholder="Search player or school…" />
@@ -220,21 +185,6 @@
       </div>
     </div>
 
-    <!-- CONFERENCES -->
-    <div id="tab-conferences" class="tab-panel" style="display:none">
-      <div class="filter-bar">
-        <input type="text" id="conf-search" placeholder="Search conference or team…" />
-        <span class="row-count" id="conf-count"></span>
-      </div>
-      <div class="table-wrap">
-        <div class="table-title"><h2>Conferences &amp; Teams</h2></div>
-        <table id="conf-table">
-          <thead><tr><th>Conference</th><th>Team</th></tr></thead>
-          <tbody id="conf-body"></tbody>
-        </table>
-      </div>
-    </div>
-
   </div>
 </main>
 
@@ -249,16 +199,6 @@ function fmtAvg(v){if(v===null||v===undefined||v==='')return'—';const n=parseF
 function fmtInt(v){if(v===null||v===undefined||v==='')return'—';const n=parseInt(v);return isNaN(n)?'—':n;}
 function fmtDate(v){if(!v)return'—';if(v instanceof Date&&!isNaN(v))return v.toLocaleDateString('en-US',{month:'short',day:'numeric'});return'—';}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function flag(v){return v&&v!==''&&v!=='0'&&v!==0&&v!==false;}
-
-function flagBadges(r){
-  let out='';
-  if(flag(r['Age Out'])) out+='<span class="badge badge-ao">AO</span>';
-  if(flag(r['Draft']))   out+='<span class="badge badge-dr">DR</span>';
-  if(flag(r['Transfer']))out+='<span class="badge badge-tr">TR</span>';
-  if(flag(r['Performance']))out+='<span class="badge badge-pf">PF</span>';
-  return out||'<span style="color:var(--text-muted)">—</span>';
-}
 
 const sortState={};
 
@@ -306,10 +246,8 @@ async function loadData(){
     const buf=await resp.arrayBuffer();
     const wb=XLSX.read(buf,{type:'array',cellDates:true});
 
-    const offenseData  =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_roster_stats']);
     const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers'],{cellDates:true});
     const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
-    const confData     =XLSX.utils.sheet_to_json(wb.Sheets['Conferences and Teams']);
 
     // Summary has duplicate column names (LF/CF/RF repeat per category) — read as raw array and map by index
     const summaryRaw=XLSX.utils.sheet_to_json(wb.Sheets['Summary'],{header:1,defval:''});
@@ -329,11 +267,9 @@ async function loadData(){
 
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
-    buildOffense(offenseData);
     buildTransfers(transferData);
     buildDraft(draftData);
     buildSummary(summaryData);
-    buildConferences(confData);
     setupTabs();
   }catch(e){
     document.getElementById('loading').style.display='none';
@@ -343,65 +279,6 @@ async function loadData(){
     document.getElementById('app').style.display='block';
     setupTabs();
   }
-}
-
-function buildOffense(data){
-  const q=data.filter(r=>parseFloat(r.ba)>=0.2&&parseInt(r.gp)>=20);
-  const avgBA=q.reduce((s,r)=>s+parseFloat(r.ba||0),0)/(q.length||1);
-  const avgOPS=q.reduce((s,r)=>s+parseFloat(r.ops||0),0)/(q.length||1);
-  const totalHR=data.reduce((s,r)=>s+parseInt(r.hr||0),0);
-  document.getElementById('offense-summary-cards').innerHTML=`
-    <div class="stat-card"><div class="s-label">Players</div><div class="s-value">${data.length}</div><div class="s-sub">In dataset</div></div>
-    <div class="stat-card"><div class="s-label">Avg BA (qual.)</div><div class="s-value">${fmtAvg(avgBA)}</div><div class="s-sub">≥20 GP, BA ≥.200</div></div>
-    <div class="stat-card"><div class="s-label">Avg OPS (qual.)</div><div class="s-value">${fmt(avgOPS,3)}</div><div class="s-sub">Qualified hitters</div></div>
-    <div class="stat-card"><div class="s-label">Total HR</div><div class="s-value">${totalHR}</div><div class="s-sub">All players</div></div>`;
-  populateSelect('offense-pos-filter',data.map(r=>r.pos));
-  populateSelect('offense-class-filter',data.map(r=>r.class));
-  populateSelect('offense-team-filter',data.map(r=>r.team));
-
-  let sorted=[...data];
-  // col indices: Player(0) Team(1) Cl(2) Pos(3) Flags(4) AVG(5) OBP(6) SLG(7) OPS(8) GP(9) PA(10) AB(11) R(12) H(13) 2B(14) 3B(15) HR(16) RBI(17) HBP(18) BB(19) K(20) SB(21) CS(22)
-  const keys=['player','team','class','pos',null,'ba','obp','slg','ops','gp','pa','ab','r','h','2b','3b','hr','rbi','hbp','bb','k','sb','cs'];
-  function render(ci,dir){
-    if(ci!==undefined){
-      const k=keys[ci];
-      if(k) sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
-    }
-    filterOffense(sorted);
-  }
-  ['offense-search','offense-pos-filter','offense-class-filter','offense-team-filter','offense-flag-filter']
-    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterOffense(sorted)));
-  makeTableSortable('offense-table',render);
-  filterOffense(sorted);
-}
-
-function filterOffense(data){
-  const q=document.getElementById('offense-search').value.toLowerCase();
-  const pos=document.getElementById('offense-pos-filter').value;
-  const cls=document.getElementById('offense-class-filter').value;
-  const team=document.getElementById('offense-team-filter').value;
-  const fl=document.getElementById('offense-flag-filter').value;
-  const f=data.filter(r=>{
-    if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.team||'').toLowerCase().includes(q))return false;
-    if(pos&&r.pos!==pos)return false;
-    if(cls&&r.class!==cls)return false;
-    if(team&&r.team!==team)return false;
-    if(fl==='ao'&&!flag(r['Age Out']))return false;
-    if(fl==='dr'&&!flag(r['Draft']))return false;
-    if(fl==='tr'&&!flag(r['Transfer']))return false;
-    if(fl==='pf'&&!flag(r['Performance']))return false;
-    return true;
-  });
-  document.getElementById('offense-count').textContent=f.length+' players';
-  document.getElementById('offense-body').innerHTML=f.map(r=>`<tr>
-    <td class="name">${esc(r.player)}</td><td>${esc(r.team)}</td><td>${esc(r.class)}</td><td>${esc(r.pos)}</td>
-    <td class="flags-cell">${flagBadges(r)}</td>
-    <td class="num">${fmtAvg(r.ba)}</td><td class="num">${fmtAvg(r.obp)}</td><td class="num">${fmtAvg(r.slg)}</td><td class="num">${fmtAvg(r.ops)}</td>
-    <td class="num">${fmtInt(r.gp)}</td><td class="num">${fmtInt(r.pa)}</td><td class="num">${fmtInt(r.ab)}</td><td class="num">${fmtInt(r.r)}</td>
-    <td class="num">${fmtInt(r.h)}</td><td class="num">${fmtInt(r['2b'])}</td><td class="num">${fmtInt(r['3b'])}</td><td class="num">${fmtInt(r.hr)}</td>
-    <td class="num">${fmtInt(r.rbi)}</td><td class="num">${fmtInt(r.hbp)}</td><td class="num">${fmtInt(r.bb)}</td><td class="num">${fmtInt(r.k)}</td>
-    <td class="num">${fmtInt(r.sb)}</td><td class="num">${fmtInt(r.cs)}</td>
-  </tr>`).join('');
 }
 
 function buildTransfers(data){
@@ -533,27 +410,6 @@ function filterSummary(data){
     <td class="num">${fmtInt(r.PF_LF)}</td><td class="num">${fmtInt(r.PF_CF)}</td><td class="num">${fmtInt(r.PF_RF)}</td><td class="num">${fmtInt(r['TOTAL PERFORMANCE'])}</td>
     <td class="num">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
   </tr>`).join('');
-}
-
-function buildConferences(data){
-  let sorted=[...data];
-  function render(ci,dir){
-    if(ci!==undefined){const keys=['Conference','Team'];const k=keys[ci];sorted.sort((a,b)=>{const av=a[k]||'';const bv=b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
-    filterConferences(sorted);
-  }
-  document.getElementById('conf-search').addEventListener('input',()=>filterConferences(sorted));
-  makeTableSortable('conf-table',render);
-  filterConferences(sorted);
-}
-
-function filterConferences(data){
-  const q=document.getElementById('conf-search').value.toLowerCase();
-  const f=data.filter(r=>{
-    if(q&&!String(r.Conference||'').toLowerCase().includes(q)&&!String(r.Team||'').toLowerCase().includes(q))return false;
-    return true;
-  });
-  document.getElementById('conf-count').textContent=f.length+' teams';
-  document.getElementById('conf-body').innerHTML=f.map(r=>`<tr><td>${esc(r.Conference)}</td><td class="name">${esc(r.Team)}</td></tr>`).join('');
 }
 
 function setupTabs(){
