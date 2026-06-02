@@ -13,14 +13,23 @@
     .filter-bar input, .filter-bar select { font-family: var(--mono); font-size: 0.75rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; height: 32px; }
     .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
     .filter-bar input { width: 200px; }
-    .badge { display: inline-block; font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.06em; padding: 0.2rem 0.5rem; border-radius: 2px; }
+    .badge { display: inline-block; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.15rem 0.4rem; border-radius: 2px; margin-right: 2px; }
     .badge-available { background: #e8f5e9; color: #2e7d32; }
     .badge-committed { background: #e3f2fd; color: #1565c0; }
     .badge-hs { background: #fff3e0; color: #e65100; }
     .badge-college { background: #f3e5f5; color: #6a1b9a; }
+    .badge-ao { background: #fce4ec; color: #880e4f; }
+    .badge-dr { background: #e3f2fd; color: #0d47a1; }
+    .badge-tr { background: #fff3e0; color: #bf360c; }
+    .badge-pf { background: #ede7f6; color: #4527a0; }
     .row-count { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); margin-left: auto; align-self: center; }
     thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
     thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+    thead th.group-hdr { background: var(--bg); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); text-align: center; border-bottom: 1px solid var(--border); padding: 0.4rem 0.5rem; cursor: default; user-select: none; }
+    thead th.group-hdr:hover { color: var(--text-muted); }
+    thead th[data-key] { cursor: pointer; }
+    thead th[data-key]:hover { color: var(--text); }
+    td.flags-cell { white-space: nowrap; min-width: 60px; }
   </style>
 </head>
 <body>
@@ -58,7 +67,7 @@
       <a class="tab" href="#" data-tab="conferences">Conferences &amp; Teams</a>
     </div>
 
-    <!-- OFFENSE DATA -->
+    <!-- OFFENSE -->
     <div id="tab-offense" class="tab-panel">
       <div class="stat-grid" id="offense-summary-cards"></div>
       <div class="filter-bar">
@@ -66,24 +75,32 @@
         <select id="offense-pos-filter"><option value="">All Positions</option></select>
         <select id="offense-class-filter"><option value="">All Classes</option></select>
         <select id="offense-team-filter"><option value="">All Teams</option></select>
+        <select id="offense-flag-filter">
+          <option value="">All Players</option>
+          <option value="ao">Age Out</option>
+          <option value="dr">Draft Prospect</option>
+          <option value="tr">In Transfer Portal</option>
+          <option value="pf">Performance Flag</option>
+        </select>
         <span class="row-count" id="offense-count"></span>
       </div>
       <div class="table-wrap">
         <div class="table-title"><h2>Batting Stats — 2026</h2></div>
         <table id="offense-table">
           <thead><tr>
-            <th>Player</th><th>Team</th><th>Cl</th><th>Pos</th>
-            <th class="num">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
+            <th>Player</th><th>Team</th><th>Cl</th><th>Pos</th><th>Flags</th>
+            <th class="num sorted">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
             <th class="num">GP</th><th class="num">PA</th><th class="num">AB</th><th class="num">R</th>
             <th class="num">H</th><th class="num">2B</th><th class="num">3B</th><th class="num">HR</th>
-            <th class="num">RBI</th><th class="num">BB</th><th class="num">K</th><th class="num">SB</th>
+            <th class="num">RBI</th><th class="num">HBP</th><th class="num">BB</th><th class="num">K</th>
+            <th class="num">SB</th><th class="num">CS</th>
           </tr></thead>
           <tbody id="offense-body"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- TRANSFER DATA -->
+    <!-- TRANSFERS -->
     <div id="tab-transfers" class="tab-panel" style="display:none">
       <div class="stat-grid" id="transfer-summary-cards"></div>
       <div class="filter-bar">
@@ -102,16 +119,19 @@
         <table id="transfer-table">
           <thead><tr>
             <th>Player</th><th>Pos</th><th>Cl</th><th>From</th><th>Conference</th>
-            <th>To</th><th>Status</th>
+            <th>To</th><th>Status</th><th>Date</th>
             <th class="num">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
-            <th class="num">GP</th><th class="num">HR</th><th class="num">RBI</th><th class="num">SB</th>
+            <th class="num">GP</th><th class="num">PA</th><th class="num">AB</th><th class="num">R</th>
+            <th class="num">H</th><th class="num">2B</th><th class="num">3B</th><th class="num">HR</th>
+            <th class="num">RBI</th><th class="num">HBP</th><th class="num">BB</th><th class="num">K</th>
+            <th class="num">SB</th><th class="num">CS</th>
           </tr></thead>
           <tbody id="transfer-body"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- DRAFT DATA -->
+    <!-- DRAFT -->
     <div id="tab-draft" class="tab-panel" style="display:none">
       <div class="filter-bar">
         <input type="text" id="draft-search" placeholder="Search player or school…" />
@@ -134,7 +154,7 @@
       </div>
     </div>
 
-    <!-- SUMMARY DATA -->
+    <!-- SUMMARY -->
     <div id="tab-summary" class="tab-panel" style="display:none">
       <div class="filter-bar">
         <input type="text" id="summary-search" placeholder="Search team or conference…" />
@@ -144,13 +164,57 @@
       <div class="table-wrap">
         <div class="table-title"><h2>Team Summary — 2026</h2></div>
         <table id="summary-table">
-          <thead><tr>
-            <th>Team</th><th>Conference</th>
-            <th class="num">Roster</th>
-            <th class="num">FR</th><th class="num">SO</th><th class="num">JR</th><th class="num">SR</th><th class="num">GR</th>
-            <th class="num">Age Out</th><th class="num">Draft</th><th class="num">Transfers</th><th class="num">Perf.</th>
-            <th class="num">Remaining</th>
-          </tr></thead>
+          <thead>
+            <tr>
+              <th class="group-hdr" rowspan="2" style="text-align:left">Team</th>
+              <th class="group-hdr" rowspan="2" style="text-align:left">Conf.</th>
+              <th class="group-hdr" rowspan="2">Roster</th>
+              <th class="group-hdr" colspan="10">Positions</th>
+              <th class="group-hdr" colspan="5">Class</th>
+              <th class="group-hdr" colspan="4">Age Out</th>
+              <th class="group-hdr" colspan="4">Draft</th>
+              <th class="group-hdr" colspan="4">Transfers</th>
+              <th class="group-hdr" colspan="4">Performance</th>
+              <th class="group-hdr" colspan="4">Remaining OF</th>
+            </tr>
+            <tr>
+              <th class="num" data-key="C">C</th>
+              <th class="num" data-key="1B">1B</th>
+              <th class="num" data-key="2B">2B</th>
+              <th class="num" data-key="3B">3B</th>
+              <th class="num" data-key="SS">SS</th>
+              <th class="num" data-key="LF_pos">LF</th>
+              <th class="num" data-key="CF_pos">CF</th>
+              <th class="num" data-key="RF_pos">RF</th>
+              <th class="num" data-key="DH">DH</th>
+              <th class="num" data-key="P">P</th>
+              <th class="num" data-key="FR">FR</th>
+              <th class="num" data-key="SO">SO</th>
+              <th class="num" data-key="JR">JR</th>
+              <th class="num" data-key="SR">SR</th>
+              <th class="num" data-key="GR">GR</th>
+              <th class="num" data-key="AO_LF">LF</th>
+              <th class="num" data-key="AO_CF">CF</th>
+              <th class="num" data-key="AO_RF">RF</th>
+              <th class="num" data-key="TOTAL AGE OUT">Total</th>
+              <th class="num" data-key="DR_LF">LF</th>
+              <th class="num" data-key="DR_CF">CF</th>
+              <th class="num" data-key="DR_RF">RF</th>
+              <th class="num" data-key="TOTAL DRAFT">Total</th>
+              <th class="num" data-key="TR_LF">LF</th>
+              <th class="num" data-key="TR_CF">CF</th>
+              <th class="num" data-key="TR_RF">RF</th>
+              <th class="num" data-key="TOTAL TRANSFERS">Total</th>
+              <th class="num" data-key="PF_LF">LF</th>
+              <th class="num" data-key="PF_CF">CF</th>
+              <th class="num" data-key="PF_RF">RF</th>
+              <th class="num" data-key="TOTAL PERFORMANCE">Total</th>
+              <th class="num" data-key="Remaining LF">LF</th>
+              <th class="num" data-key="Remaining CF">CF</th>
+              <th class="num" data-key="Remaining RF">RF</th>
+              <th class="num" data-key="Remaining TOTAL OF">Total</th>
+            </tr>
+          </thead>
           <tbody id="summary-body"></tbody>
         </table>
       </div>
@@ -183,9 +247,21 @@
 function fmt(v,d){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d);}
 function fmtAvg(v){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);if(isNaN(n)||n===0)return'—';return n.toFixed(3).replace(/^0/,'');}
 function fmtInt(v){if(v===null||v===undefined||v==='')return'—';const n=parseInt(v);return isNaN(n)?'—':n;}
+function fmtDate(v){if(!v)return'—';if(v instanceof Date&&!isNaN(v))return v.toLocaleDateString('en-US',{month:'short',day:'numeric'});return'—';}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function flag(v){return v&&v!==''&&v!=='0'&&v!==0&&v!==false;}
+
+function flagBadges(r){
+  let out='';
+  if(flag(r['Age Out'])) out+='<span class="badge badge-ao">AO</span>';
+  if(flag(r['Draft']))   out+='<span class="badge badge-dr">DR</span>';
+  if(flag(r['Transfer']))out+='<span class="badge badge-tr">TR</span>';
+  if(flag(r['Performance']))out+='<span class="badge badge-pf">PF</span>';
+  return out||'<span style="color:var(--text-muted)">—</span>';
+}
 
 const sortState={};
+
 function makeTableSortable(tableId,renderFn){
   const table=document.getElementById(tableId);
   if(!table)return;
@@ -196,6 +272,20 @@ function makeTableSortable(tableId,renderFn){
       table.querySelectorAll('thead th').forEach(h=>{h.classList.remove('sorted-asc','sorted-desc');});
       th.classList.add(sortState[k]==='asc'?'sorted-asc':'sorted-desc');
       renderFn(i,sortState[k]);
+    });
+  });
+}
+
+function makeGroupedTableSortable(tableId,renderFn){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const k=th.dataset.key;
+      const dir=th.classList.contains('sorted-asc')?'desc':'asc';
+      table.querySelectorAll('thead th').forEach(h=>h.classList.remove('sorted-asc','sorted-desc'));
+      th.classList.add(dir==='asc'?'sorted-asc':'sorted-desc');
+      renderFn(k,dir);
     });
   });
 }
@@ -214,12 +304,29 @@ async function loadData(){
     const resp=await fetch('/d1/data/2026_D1Baseball.xlsm');
     if(!resp.ok)throw new Error('File not found ('+resp.status+'). Upload your Excel file to /d1/data/2026_D1Baseball.xlsm in your repo.');
     const buf=await resp.arrayBuffer();
-    const wb=XLSX.read(buf,{type:'array'});
+    const wb=XLSX.read(buf,{type:'array',cellDates:true});
+
     const offenseData  =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_roster_stats']);
-    const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers']);
+    const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers'],{cellDates:true});
     const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
     const confData     =XLSX.utils.sheet_to_json(wb.Sheets['Conferences and Teams']);
-    const summaryData  =XLSX.utils.sheet_to_json(wb.Sheets['Summary']);
+
+    // Summary has duplicate column names (LF/CF/RF repeat per category) — read as raw array and map by index
+    const summaryRaw=XLSX.utils.sheet_to_json(wb.Sheets['Summary'],{header:1,defval:''});
+    const summaryData=summaryRaw.slice(1).filter(row=>row[1]).map(row=>({
+      'Team':             row[1],
+      'CURRENT ROSTER':  row[2],
+      'Conference':       row[3],
+      'C':   row[5],  '1B': row[6],  '2B': row[7],  '3B': row[8],  'SS': row[9],
+      'LF_pos': row[10], 'CF_pos': row[11], 'RF_pos': row[12], 'DH': row[13], 'P': row[14],
+      'FR': row[17], 'SO': row[18], 'JR': row[19], 'SR': row[20], 'GR': row[21],
+      'AO_LF': row[26], 'AO_CF': row[27], 'AO_RF': row[28], 'TOTAL AGE OUT':  row[29],
+      'DR_LF': row[32], 'DR_CF': row[33], 'DR_RF': row[34], 'TOTAL DRAFT':    row[35],
+      'TR_LF': row[38], 'TR_CF': row[39], 'TR_RF': row[40], 'TOTAL TRANSFERS':row[41],
+      'PF_LF': row[44], 'PF_CF': row[45], 'PF_RF': row[46], 'TOTAL PERFORMANCE':row[47],
+      'Remaining LF': row[49], 'Remaining CF': row[50], 'Remaining RF': row[51], 'Remaining TOTAL OF': row[52]
+    }));
+
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
     buildOffense(offenseData);
@@ -251,35 +358,49 @@ function buildOffense(data){
   populateSelect('offense-pos-filter',data.map(r=>r.pos));
   populateSelect('offense-class-filter',data.map(r=>r.class));
   populateSelect('offense-team-filter',data.map(r=>r.team));
+
   let sorted=[...data];
-  const keys=['player','team','class','pos','ba','obp','slg','ops','gp','pa','ab','r','h','2b','3b','hr','rbi','bb','k','sb'];
+  // col indices: Player(0) Team(1) Cl(2) Pos(3) Flags(4) AVG(5) OBP(6) SLG(7) OPS(8) GP(9) PA(10) AB(11) R(12) H(13) 2B(14) 3B(15) HR(16) RBI(17) HBP(18) BB(19) K(20) SB(21) CS(22)
+  const keys=['player','team','class','pos',null,'ba','obp','slg','ops','gp','pa','ab','r','h','2b','3b','hr','rbi','hbp','bb','k','sb','cs'];
   function render(ci,dir){
-    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    if(ci!==undefined){
+      const k=keys[ci];
+      if(k) sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
+    }
     filterOffense(sorted);
   }
-  ['offense-search','offense-pos-filter','offense-class-filter','offense-team-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterOffense(sorted)));
+  ['offense-search','offense-pos-filter','offense-class-filter','offense-team-filter','offense-flag-filter']
+    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterOffense(sorted)));
   makeTableSortable('offense-table',render);
   filterOffense(sorted);
 }
+
 function filterOffense(data){
   const q=document.getElementById('offense-search').value.toLowerCase();
   const pos=document.getElementById('offense-pos-filter').value;
   const cls=document.getElementById('offense-class-filter').value;
   const team=document.getElementById('offense-team-filter').value;
+  const fl=document.getElementById('offense-flag-filter').value;
   const f=data.filter(r=>{
     if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.team||'').toLowerCase().includes(q))return false;
     if(pos&&r.pos!==pos)return false;
     if(cls&&r.class!==cls)return false;
     if(team&&r.team!==team)return false;
+    if(fl==='ao'&&!flag(r['Age Out']))return false;
+    if(fl==='dr'&&!flag(r['Draft']))return false;
+    if(fl==='tr'&&!flag(r['Transfer']))return false;
+    if(fl==='pf'&&!flag(r['Performance']))return false;
     return true;
   });
   document.getElementById('offense-count').textContent=f.length+' players';
   document.getElementById('offense-body').innerHTML=f.map(r=>`<tr>
     <td class="name">${esc(r.player)}</td><td>${esc(r.team)}</td><td>${esc(r.class)}</td><td>${esc(r.pos)}</td>
+    <td class="flags-cell">${flagBadges(r)}</td>
     <td class="num">${fmtAvg(r.ba)}</td><td class="num">${fmtAvg(r.obp)}</td><td class="num">${fmtAvg(r.slg)}</td><td class="num">${fmtAvg(r.ops)}</td>
     <td class="num">${fmtInt(r.gp)}</td><td class="num">${fmtInt(r.pa)}</td><td class="num">${fmtInt(r.ab)}</td><td class="num">${fmtInt(r.r)}</td>
     <td class="num">${fmtInt(r.h)}</td><td class="num">${fmtInt(r['2b'])}</td><td class="num">${fmtInt(r['3b'])}</td><td class="num">${fmtInt(r.hr)}</td>
-    <td class="num">${fmtInt(r.rbi)}</td><td class="num">${fmtInt(r.bb)}</td><td class="num">${fmtInt(r.k)}</td><td class="num">${fmtInt(r.sb)}</td>
+    <td class="num">${fmtInt(r.rbi)}</td><td class="num">${fmtInt(r.hbp)}</td><td class="num">${fmtInt(r.bb)}</td><td class="num">${fmtInt(r.k)}</td>
+    <td class="num">${fmtInt(r.sb)}</td><td class="num">${fmtInt(r.cs)}</td>
   </tr>`).join('');
 }
 
@@ -293,16 +414,24 @@ function buildTransfers(data){
     <div class="stat-card"><div class="s-label">Pitchers</div><div class="s-value">${pitch}</div><div class="s-sub">Arms in portal</div></div>`;
   populateSelect('transfer-pos-filter',data.map(r=>r.pos));
   populateSelect('transfer-conf-filter',data.map(r=>r.Conference));
+
   let sorted=[...data];
-  const keys=['player','pos','class','from_school','Conference','to_school','_status','BA','OBP','SLG','OPS','GP','HR','RBI','SB'];
+  // Player(0) Pos(1) Cl(2) From(3) Conf(4) To(5) Status(6) Date(7) AVG(8) OBP(9) SLG(10) OPS(11) GP(12) PA(13) AB(14) R(15) H(16) 2B(17) 3B(18) HR(19) RBI(20) HBP(21) BB(22) K(23) SB(24) CS(25)
+  const keys=['player','pos','class','from_school','Conference','to_school','_status','date_entered','BA','OBP','SLG','OPS','GP','PA','AB','R','H','2B','3B','HR','RBI','HBP','BB','K','SB','CS'];
   function render(ci,dir){
-    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    if(ci!==undefined){
+      const k=keys[ci];
+      if(k&&k!=='_status'&&k!=='date_entered') sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
+      if(k==='date_entered') sorted.sort((a,b)=>{const av=a[k]?a[k].getTime():0;const bv=b[k]?b[k].getTime():0;return dir==='asc'?av-bv:bv-av;});
+    }
     filterTransfers(sorted);
   }
-  ['transfer-search','transfer-pos-filter','transfer-conf-filter','transfer-status-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterTransfers(sorted)));
+  ['transfer-search','transfer-pos-filter','transfer-conf-filter','transfer-status-filter']
+    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterTransfers(sorted)));
   makeTableSortable('transfer-table',render);
   filterTransfers(sorted);
 }
+
 function filterTransfers(data){
   const q=document.getElementById('transfer-search').value.toLowerCase();
   const pos=document.getElementById('transfer-pos-filter').value;
@@ -325,8 +454,12 @@ function filterTransfers(data){
       <td>${esc(r.from_school)}</td><td>${esc(r.Conference)}</td>
       <td>${isAvail?'<span style="color:var(--text-muted)">—</span>':esc(r.to_school)}</td>
       <td>${isAvail?'<span class="badge badge-available">Available</span>':'<span class="badge badge-committed">Committed</span>'}</td>
+      <td>${fmtDate(r.date_entered)}</td>
       <td class="num">${fmtAvg(r.BA)}</td><td class="num">${fmtAvg(r.OBP)}</td><td class="num">${fmtAvg(r.SLG)}</td><td class="num">${fmtAvg(r.OPS)}</td>
-      <td class="num">${fmtInt(r.GP)}</td><td class="num">${fmtInt(r.HR)}</td><td class="num">${fmtInt(r.RBI)}</td><td class="num">${fmtInt(r.SB)}</td>
+      <td class="num">${fmtInt(r.GP)}</td><td class="num">${fmtInt(r.PA)}</td><td class="num">${fmtInt(r.AB)}</td><td class="num">${fmtInt(r.R)}</td>
+      <td class="num">${fmtInt(r.H)}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.HR)}</td>
+      <td class="num">${fmtInt(r.RBI)}</td><td class="num">${fmtInt(r.HBP)}</td><td class="num">${fmtInt(r.BB)}</td><td class="num">${fmtInt(r.K)}</td>
+      <td class="num">${fmtInt(r.SB)}</td><td class="num">${fmtInt(r.CS)}</td>
     </tr>`;
   }).join('');
 }
@@ -343,6 +476,7 @@ function buildDraft(data){
   makeTableSortable('draft-table',render);
   filterDraft(sorted);
 }
+
 function filterDraft(data){
   const q=document.getElementById('draft-search').value.toLowerCase();
   const pos=document.getElementById('draft-pos-filter').value;
@@ -369,15 +503,15 @@ function filterDraft(data){
 function buildSummary(data){
   populateSelect('summary-conf-filter',data.map(r=>r.Conference));
   let sorted=[...data];
-  const keys=['Team','Conference','CURRENT ROSTER','FR','SO','JR','SR','GR','TOTAL AGE OUT','TOTAL DRAFT','TOTAL TRANSFERS','TOTAL PERFORMANCE','Remaining LF'];
-  function render(ci,dir){
-    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+  function render(k,dir){
+    if(k) sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
     filterSummary(sorted);
   }
   ['summary-search','summary-conf-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterSummary(sorted)));
-  makeTableSortable('summary-table',render);
+  makeGroupedTableSortable('summary-table',render);
   filterSummary(sorted);
 }
+
 function filterSummary(data){
   const q=document.getElementById('summary-search').value.toLowerCase();
   const conf=document.getElementById('summary-conf-filter').value;
@@ -390,9 +524,14 @@ function filterSummary(data){
   document.getElementById('summary-body').innerHTML=f.map(r=>`<tr>
     <td class="name">${esc(r.Team)}</td><td>${esc(r.Conference)}</td>
     <td class="num">${fmtInt(r['CURRENT ROSTER'])}</td>
+    <td class="num">${fmtInt(r.C)}</td><td class="num">${fmtInt(r['1B'])}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.SS)}</td>
+    <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td><td class="num">${fmtInt(r.P)}</td>
     <td class="num">${fmtInt(r.FR)}</td><td class="num">${fmtInt(r.SO)}</td><td class="num">${fmtInt(r.JR)}</td><td class="num">${fmtInt(r.SR)}</td><td class="num">${fmtInt(r.GR)}</td>
-    <td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td><td class="num">${fmtInt(r['TOTAL PERFORMANCE'])}</td>
-    <td class="num">${fmtInt(r['Remaining LF'])}</td>
+    <td class="num">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td>
+    <td class="num">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td>
+    <td class="num">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td>
+    <td class="num">${fmtInt(r.PF_LF)}</td><td class="num">${fmtInt(r.PF_CF)}</td><td class="num">${fmtInt(r.PF_RF)}</td><td class="num">${fmtInt(r['TOTAL PERFORMANCE'])}</td>
+    <td class="num">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
   </tr>`).join('');
 }
 
@@ -406,6 +545,7 @@ function buildConferences(data){
   makeTableSortable('conf-table',render);
   filterConferences(sorted);
 }
+
 function filterConferences(data){
   const q=document.getElementById('conf-search').value.toLowerCase();
   const f=data.filter(r=>{
