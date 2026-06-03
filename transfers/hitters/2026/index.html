@@ -135,14 +135,14 @@
             <tr>
               <th class="group-hdr" rowspan="2" style="text-align:left">Team</th>
               <th class="group-hdr" rowspan="2" style="text-align:left">Conf.</th>
-              <th class="group-hdr gs" rowspan="2">Roster</th>
-              <th class="group-hdr" colspan="10">Positions</th>
-              <th class="group-hdr gs" colspan="4">Age Out</th>
-              <th class="group-hdr gs" colspan="4">Draft</th>
-              <th class="group-hdr gs" colspan="4">Transfers</th>
-              <th class="group-hdr gs" colspan="4">Remaining OF</th>
+              <th class="group-hdr gs" colspan="10">Positions</th>
+              <th class="group-hdr gs" colspan="11">Age Out</th>
+              <th class="group-hdr gs" colspan="11">Draft</th>
+              <th class="group-hdr gs" colspan="11">Transfers</th>
+              <th class="group-hdr gs" colspan="12">Remaining</th>
             </tr>
             <tr>
+              <th class="num gs" data-key="P_pos">P</th>
               <th class="num" data-key="C">C</th>
               <th class="num" data-key="1B">1B</th>
               <th class="num" data-key="2B">2B</th>
@@ -152,23 +152,51 @@
               <th class="num" data-key="CF_pos">CF</th>
               <th class="num" data-key="RF_pos">RF</th>
               <th class="num" data-key="DH">DH</th>
-              <th class="num" data-key="P">P</th>
-              <th class="num gs" data-key="AO_LF">LF</th>
+              <th class="num gs" data-key="AO_P">P</th>
+              <th class="num" data-key="AO_C">C</th>
+              <th class="num" data-key="AO_1B">1B</th>
+              <th class="num" data-key="AO_2B">2B</th>
+              <th class="num" data-key="AO_3B">3B</th>
+              <th class="num" data-key="AO_SS">SS</th>
+              <th class="num" data-key="AO_LF">LF</th>
               <th class="num" data-key="AO_CF">CF</th>
               <th class="num" data-key="AO_RF">RF</th>
+              <th class="num" data-key="AO_DH">DH</th>
               <th class="num" data-key="TOTAL AGE OUT">Total</th>
-              <th class="num gs" data-key="DR_LF">LF</th>
+              <th class="num gs" data-key="DR_P">P</th>
+              <th class="num" data-key="DR_C">C</th>
+              <th class="num" data-key="DR_1B">1B</th>
+              <th class="num" data-key="DR_2B">2B</th>
+              <th class="num" data-key="DR_3B">3B</th>
+              <th class="num" data-key="DR_SS">SS</th>
+              <th class="num" data-key="DR_LF">LF</th>
               <th class="num" data-key="DR_CF">CF</th>
               <th class="num" data-key="DR_RF">RF</th>
+              <th class="num" data-key="DR_DH">DH</th>
               <th class="num" data-key="TOTAL DRAFT">Total</th>
-              <th class="num gs" data-key="TR_LF">LF</th>
+              <th class="num gs" data-key="TR_P">P</th>
+              <th class="num" data-key="TR_C">C</th>
+              <th class="num" data-key="TR_1B">1B</th>
+              <th class="num" data-key="TR_2B">2B</th>
+              <th class="num" data-key="TR_3B">3B</th>
+              <th class="num" data-key="TR_SS">SS</th>
+              <th class="num" data-key="TR_LF">LF</th>
               <th class="num" data-key="TR_CF">CF</th>
               <th class="num" data-key="TR_RF">RF</th>
+              <th class="num" data-key="TR_DH">DH</th>
               <th class="num" data-key="TOTAL TRANSFERS">Total</th>
-              <th class="num gs" data-key="Remaining LF">LF</th>
+              <th class="num gs" data-key="Rem_P">P</th>
+              <th class="num" data-key="Rem_C">C</th>
+              <th class="num" data-key="Rem_1B">1B</th>
+              <th class="num" data-key="Rem_2B">2B</th>
+              <th class="num" data-key="Rem_3B">3B</th>
+              <th class="num" data-key="Rem_SS">SS</th>
+              <th class="num" data-key="Remaining LF">LF</th>
               <th class="num" data-key="Remaining CF">CF</th>
               <th class="num" data-key="Remaining RF">RF</th>
-              <th class="num" data-key="Remaining TOTAL OF">Total</th>
+              <th class="num" data-key="Rem_DH">DH</th>
+              <th class="num" data-key="TOTAL REMAINING">Total</th>
+              <th class="num" data-key="Remaining TOTAL OF">OF Total</th>
             </tr>
           </thead>
           <tbody id="summary-body"></tbody>
@@ -239,22 +267,36 @@ async function loadData(){
     const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers']);
     const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
 
-    // Summary has duplicate column names (LF/CF/RF repeat per category) — read as raw array and map by index
-    // Col layout (0-based): 0=Year,1=Team,2=Conference,3=Roster,4=spacer,5-14=positions,
-    //   15-16=spacers, 17=AgeOut label,18-21=AO LF/CF/RF/Total, 22=spacer, 23=Draft label,
-    //   24-27=DR LF/CF/RF/Total, 28=spacer, 29=Transfers label, 30-33=TR LF/CF/RF/Total,
-    //   34=spacer, 35=Remaining label, 36-39=Rem LF/CF/RF/Total, 40-41=spacers
+    // Summary has duplicate column names — read as raw array and map by index
+    // Col layout (0-based): 0=Year,1=Team,2=Conference,3-4=spacers
+    //   5=P(pitch),6=C,7=1B,8=2B,9=3B,10=SS,11=LF,12=CF,13=RF,14=DH,15-16=spacers
+    //   17=AgeOut label, 18=AO_P,19=AO_C,20=AO_1B,21=AO_2B,22=AO_3B,23=AO_SS,
+    //     24=AO_LF,25=AO_CF,26=AO_RF,27=AO_DH,28=TOTAL AGE OUT
+    //   29=spacer, 30=Draft label,
+    //     31=DR_P,32=DR_C,33=DR_1B,34=DR_2B,35=DR_3B,36=DR_SS,
+    //     37=DR_LF,38=DR_CF,39=DR_RF,40=DR_DH,41=TOTAL DRAFT
+    //   42=spacer, 43=Transfers label,
+    //     44=TR_P,45=TR_C,46=TR_1B,47=TR_2B,48=TR_3B,49=TR_SS,
+    //     50=TR_LF,51=TR_CF,52=TR_RF,53=TR_DH,54=TOTAL TRANSFERS
+    //   55=spacer, 56=Remaining label,
+    //     57=Rem_P,58=Rem_C,59=Rem_1B,60=Rem_2B,61=Rem_3B,62=Rem_SS,
+    //     63=Rem_LF,64=Rem_CF,65=Rem_RF,66=Rem_DH,67=TOTAL REMAINING,68=TOTAL REMAINING OF
+    //   70=Short List Target
     const summaryRaw=XLSX.utils.sheet_to_json(wb.Sheets['Summary'],{header:1,defval:''});
     const summaryData=summaryRaw.slice(1).filter(row=>row[1]).map(row=>({
-      'Team':             row[1],
-      'Conference':       row[2],
-      'CURRENT ROSTER':  row[3],
-      'C':   row[5],  '1B': row[6],  '2B': row[7],  '3B': row[8],  'SS': row[9],
-      'LF_pos': row[10], 'CF_pos': row[11], 'RF_pos': row[12], 'DH': row[13], 'P': row[14],
-      'AO_LF': row[18], 'AO_CF': row[19], 'AO_RF': row[20], 'TOTAL AGE OUT':  row[21],
-      'DR_LF': row[24], 'DR_CF': row[25], 'DR_RF': row[26], 'TOTAL DRAFT':    row[27],
-      'TR_LF': row[30], 'TR_CF': row[31], 'TR_RF': row[32], 'TOTAL TRANSFERS':row[33],
-      'Remaining LF': row[36], 'Remaining CF': row[37], 'Remaining RF': row[38], 'Remaining TOTAL OF': row[39]
+      'Team':        row[1],
+      'Conference':  row[2],
+      'P_pos': row[5],  'C': row[6],   '1B': row[7],  '2B': row[8],  '3B': row[9],  'SS': row[10],
+      'LF_pos': row[11], 'CF_pos': row[12], 'RF_pos': row[13], 'DH': row[14],
+      'AO_P': row[18], 'AO_C': row[19], 'AO_1B': row[20], 'AO_2B': row[21], 'AO_3B': row[22], 'AO_SS': row[23],
+      'AO_LF': row[24], 'AO_CF': row[25], 'AO_RF': row[26], 'AO_DH': row[27], 'TOTAL AGE OUT': row[28],
+      'DR_P': row[31], 'DR_C': row[32], 'DR_1B': row[33], 'DR_2B': row[34], 'DR_3B': row[35], 'DR_SS': row[36],
+      'DR_LF': row[37], 'DR_CF': row[38], 'DR_RF': row[39], 'DR_DH': row[40], 'TOTAL DRAFT': row[41],
+      'TR_P': row[44], 'TR_C': row[45], 'TR_1B': row[46], 'TR_2B': row[47], 'TR_3B': row[48], 'TR_SS': row[49],
+      'TR_LF': row[50], 'TR_CF': row[51], 'TR_RF': row[52], 'TR_DH': row[53], 'TOTAL TRANSFERS': row[54],
+      'Rem_P': row[57], 'Rem_C': row[58], 'Rem_1B': row[59], 'Rem_2B': row[60], 'Rem_3B': row[61], 'Rem_SS': row[62],
+      'Remaining LF': row[63], 'Remaining CF': row[64], 'Remaining RF': row[65], 'Rem_DH': row[66],
+      'TOTAL REMAINING': row[67], 'Remaining TOTAL OF': row[68]
     }));
 
     document.getElementById('loading').style.display='none';
@@ -392,13 +434,17 @@ function filterSummary(data){
   document.getElementById('summary-count').textContent=f.length+' teams';
   document.getElementById('summary-body').innerHTML=f.map(r=>`<tr>
     <td class="name">${esc(r.Team)}</td><td>${esc(r.Conference)}</td>
-    <td class="num gs">${fmtInt(r['CURRENT ROSTER'])}</td>
-    <td class="num">${fmtInt(r.C)}</td><td class="num">${fmtInt(r['1B'])}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.SS)}</td>
-    <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td><td class="num">${fmtInt(r.P)}</td>
-    <td class="num gs">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td>
-    <td class="num gs">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td>
-    <td class="num gs">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td>
-    <td class="num gs">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
+    <td class="num gs">${fmtInt(r.P_pos)}</td><td class="num">${fmtInt(r.C)}</td><td class="num">${fmtInt(r['1B'])}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.SS)}</td>
+    <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td>
+    <td class="num gs">${fmtInt(r.AO_P)}</td><td class="num">${fmtInt(r.AO_C)}</td><td class="num">${fmtInt(r.AO_1B)}</td><td class="num">${fmtInt(r.AO_2B)}</td><td class="num">${fmtInt(r.AO_3B)}</td><td class="num">${fmtInt(r.AO_SS)}</td>
+    <td class="num">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r.AO_DH)}</td><td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td>
+    <td class="num gs">${fmtInt(r.DR_P)}</td><td class="num">${fmtInt(r.DR_C)}</td><td class="num">${fmtInt(r.DR_1B)}</td><td class="num">${fmtInt(r.DR_2B)}</td><td class="num">${fmtInt(r.DR_3B)}</td><td class="num">${fmtInt(r.DR_SS)}</td>
+    <td class="num">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r.DR_DH)}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td>
+    <td class="num gs">${fmtInt(r.TR_P)}</td><td class="num">${fmtInt(r.TR_C)}</td><td class="num">${fmtInt(r.TR_1B)}</td><td class="num">${fmtInt(r.TR_2B)}</td><td class="num">${fmtInt(r.TR_3B)}</td><td class="num">${fmtInt(r.TR_SS)}</td>
+    <td class="num">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r.TR_DH)}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td>
+    <td class="num gs">${fmtInt(r.Rem_P)}</td><td class="num">${fmtInt(r.Rem_C)}</td><td class="num">${fmtInt(r.Rem_1B)}</td><td class="num">${fmtInt(r.Rem_2B)}</td><td class="num">${fmtInt(r.Rem_3B)}</td><td class="num">${fmtInt(r.Rem_SS)}</td>
+    <td class="num">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r.Rem_DH)}</td>
+    <td class="num">${fmtInt(r['TOTAL REMAINING'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
   </tr>`).join('');
 }
 
@@ -419,4 +465,3 @@ loadData();
 </script>
 </body>
 </html>
-
