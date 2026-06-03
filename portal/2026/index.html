@@ -138,7 +138,6 @@
               <th class="group-hdr gs" colspan="4">Age Out</th>
               <th class="group-hdr gs" colspan="4">Draft</th>
               <th class="group-hdr gs" colspan="4">Transfers</th>
-              <th class="group-hdr gs" colspan="4">Performance</th>
               <th class="group-hdr gs" colspan="4">Remaining OF</th>
             </tr>
             <tr>
@@ -164,10 +163,6 @@
               <th class="num" data-key="TR_CF">CF</th>
               <th class="num" data-key="TR_RF">RF</th>
               <th class="num" data-key="TOTAL TRANSFERS">Total</th>
-              <th class="num gs" data-key="PF_LF">LF</th>
-              <th class="num" data-key="PF_CF">CF</th>
-              <th class="num" data-key="PF_RF">RF</th>
-              <th class="num" data-key="TOTAL PERFORMANCE">Total</th>
               <th class="num gs" data-key="Remaining LF">LF</th>
               <th class="num" data-key="Remaining CF">CF</th>
               <th class="num" data-key="Remaining RF">RF</th>
@@ -243,19 +238,21 @@ async function loadData(){
     const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
 
     // Summary has duplicate column names (LF/CF/RF repeat per category) — read as raw array and map by index
+    // Col layout (0-based): 0=Year,1=Team,2=Conference,3=Roster,4=spacer,5-14=positions,
+    //   15-16=spacers, 17=AgeOut label,18-21=AO LF/CF/RF/Total, 22=spacer, 23=Draft label,
+    //   24-27=DR LF/CF/RF/Total, 28=spacer, 29=Transfers label, 30-33=TR LF/CF/RF/Total,
+    //   34=spacer, 35=Remaining label, 36-39=Rem LF/CF/RF/Total, 40-41=spacers
     const summaryRaw=XLSX.utils.sheet_to_json(wb.Sheets['Summary'],{header:1,defval:''});
     const summaryData=summaryRaw.slice(1).filter(row=>row[1]).map(row=>({
       'Team':             row[1],
-      'CURRENT ROSTER':  row[2],
-      'Conference':       row[3],
+      'Conference':       row[2],
+      'CURRENT ROSTER':  row[3],
       'C':   row[5],  '1B': row[6],  '2B': row[7],  '3B': row[8],  'SS': row[9],
       'LF_pos': row[10], 'CF_pos': row[11], 'RF_pos': row[12], 'DH': row[13], 'P': row[14],
-      'FR': row[17], 'SO': row[18], 'JR': row[19], 'SR': row[20], 'GR': row[21],
-      'AO_LF': row[26], 'AO_CF': row[27], 'AO_RF': row[28], 'TOTAL AGE OUT':  row[29],
-      'DR_LF': row[32], 'DR_CF': row[33], 'DR_RF': row[34], 'TOTAL DRAFT':    row[35],
-      'TR_LF': row[38], 'TR_CF': row[39], 'TR_RF': row[40], 'TOTAL TRANSFERS':row[41],
-      'PF_LF': row[44], 'PF_CF': row[45], 'PF_RF': row[46], 'TOTAL PERFORMANCE':row[47],
-      'Remaining LF': row[49], 'Remaining CF': row[50], 'Remaining RF': row[51], 'Remaining TOTAL OF': row[52]
+      'AO_LF': row[18], 'AO_CF': row[19], 'AO_RF': row[20], 'TOTAL AGE OUT':  row[21],
+      'DR_LF': row[24], 'DR_CF': row[25], 'DR_RF': row[26], 'TOTAL DRAFT':    row[27],
+      'TR_LF': row[30], 'TR_CF': row[31], 'TR_RF': row[32], 'TOTAL TRANSFERS':row[33],
+      'Remaining LF': row[36], 'Remaining CF': row[37], 'Remaining RF': row[38], 'Remaining TOTAL OF': row[39]
     }));
 
     document.getElementById('loading').style.display='none';
@@ -400,7 +397,6 @@ function filterSummary(data){
     <td class="num gs">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td>
     <td class="num gs">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td>
     <td class="num gs">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td>
-    <td class="num gs">${fmtInt(r.PF_LF)}</td><td class="num">${fmtInt(r.PF_CF)}</td><td class="num">${fmtInt(r.PF_RF)}</td><td class="num">${fmtInt(r['TOTAL PERFORMANCE'])}</td>
     <td class="num gs">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
   </tr>`).join('');
 }
