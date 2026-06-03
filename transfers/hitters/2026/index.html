@@ -1,1 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transfers — Hitters 2026 · Beyond Stats D1</title>
+  <link rel="stylesheet" href="/d1/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .loading { padding: 3rem; text-align: center; font-family: var(--mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.08em; }
+    .error { padding: 1.5rem; background: #fff5f5; border: 1px solid #fcc; color: #c00; font-size: 0.85rem; margin-bottom: 1.5rem; font-family: var(--mono); }
+    .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+    .filter-bar input, .filter-bar select { font-family: var(--mono); font-size: 0.75rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; height: 32px; }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+    .filter-bar input { width: 200px; }
+    .badge { display: inline-block; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.15rem 0.4rem; border-radius: 2px; margin-right: 2px; }
+    .badge-available { background: #e8f5e9; color: #2e7d32; }
+    .badge-committed { background: #e3f2fd; color: #1565c0; }
+    .badge-hs { background: #fff3e0; color: #e65100; }
+    .badge-college { background: #f3e5f5; color: #6a1b9a; }
+    .badge-ao { background: #fce4ec; color: #880e4f; }
+    .badge-dr { background: #e3f2fd; color: #0d47a1; }
+    .badge-tr { background: #fff3e0; color: #bf360c; }
+    .badge-pf { background: #ede7f6; color: #4527a0; }
+    .row-count { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); margin-left: auto; align-self: center; }
+    thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
+    thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+    thead th.group-hdr { background: var(--bg); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); text-align: center; border-bottom: 1px solid var(--border); padding: 0.4rem 0.5rem; cursor: default; user-select: none; }
+    thead th.group-hdr:hover { color: var(--text-muted); }
+    thead th[data-key] { cursor: pointer; }
+    thead th[data-key]:hover { color: var(--text); }
+    td.flags-cell { white-space: nowrap; min-width: 60px; }
+    .gs { border-left: 2px solid var(--text-muted); }
+    .table-wrap { overflow-y: auto; max-height: calc(100vh - 400px); }
+    thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); box-shadow: 0 1px 0 var(--border); }
+    thead th.group-hdr { position: sticky; top: 0; z-index: 3; background: var(--bg); }
+    #summary-table thead tr:nth-child(2) th { top: 27px; z-index: 2; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/d1/">Beyond<span>Stats</span> · D1</a>
+  <ul class="nav-links">
+    <li><a href="/d1/">Home</a></li>
+    <li><a href="/d1/stats/hitting/2026/">Hitting</a></li>
+    <li><a href="/d1/stats/pitching/2026/">Pitching</a></li>
+    <li><a href="/d1/transfers/hitters/2026/" class="active">Transfers — H</a></li>
+    <li><a href="/d1/transfers/pitchers/2026/">Transfers — P</a></li>
+  </ul>
+</nav>
+
+<main>
+  <div class="year-bar">
+    <span class="year-label">Season</span>
+    <a class="year-pill active" href="/d1/transfers/hitters/2026/">2026</a>
+  </div>
+
+  <div id="error-msg" class="error" style="display:none"></div>
+  <div id="loading" class="loading">Loading data…</div>
+
+  <div id="app" style="display:none">
+    <div class="tabs">
+      <a class="tab active" href="#" data-tab="transfers">Transfer Portal</a>
+      <a class="tab" href="#" data-tab="draft">Draft Prospects</a>
+      <a class="tab" href="#" data-tab="summary">Team Summary</a>
+    </div>
+
+    <!-- TRANSFERS -->
+    <div id="tab-transfers" class="tab-panel">
+      <div class="stat-grid" id="transfer-summary-cards"></div>
+      <div class="filter-bar">
+        <input type="text" id="transfer-search" placeholder="Search player or school…" />
+        <select id="transfer-pos-filter"><option value="">All Positions</option></select>
+        <select id="transfer-conf-filter"><option value="">All Conferences</option></select>
+        <select id="transfer-school-filter"><option value="">All Schools</option></select>
+        <select id="transfer-status-filter">
+          <option value="">All</option>
+          <option value="available">Available</option>
+          <option value="committed">Committed</option>
+        </select>
+        <span class="row-count" id="transfer-count"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title"><h2>Transfer Portal — Hitters 2026</h2></div>
+        <table id="transfer-table">
+          <thead><tr>
+            <th>Player</th><th>Pos</th><th>Cl</th><th>From</th><th>Conference</th>
+            <th>To</th><th>Status</th>
+            <th class="num">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
+            <th class="num">GP</th><th class="num">PA</th><th class="num">AB</th><th class="num">R</th>
+            <th class="num">H</th><th class="num">2B</th><th class="num">3B</th><th class="num">HR</th>
+            <th class="num">RBI</th><th class="num">HBP</th><th class="num">BB</th><th class="num">K</th>
+            <th class="num">SB</th><th class="num">CS</th>
+          </tr></thead>
+          <tbody id="transfer-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DRAFT -->
+    <div id="tab-draft" class="tab-panel" style="display:none">
+      <div class="filter-bar">
+        <input type="text" id="draft-search" placeholder="Search player or school…" />
+        <select id="draft-pos-filter"><option value="">All Positions</option></select>
+        <select id="draft-type-filter">
+          <option value="">All</option>
+          <option value="College">College</option>
+          <option value="High School">High School</option>
+        </select>
+        <span class="row-count" id="draft-count"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title"><h2>Draft Prospects — 2026</h2></div>
+        <table id="draft-table">
+          <thead><tr>
+            <th class="num">Rank</th><th>Player</th><th>Pos</th><th>School</th><th>Level</th>
+          </tr></thead>
+          <tbody id="draft-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div id="tab-summary" class="tab-panel" style="display:none">
+      <div class="filter-bar">
+        <input type="text" id="summary-search" placeholder="Search team or conference…" />
+        <select id="summary-conf-filter"><option value="">All Conferences</option></select>
+        <span class="row-count" id="summary-count"></span>
+      </div>
+      <div class="table-wrap">
+        <div class="table-title"><h2>Team Summary — 2026</h2></div>
+        <table id="summary-table">
+          <thead>
+            <tr>
+              <th class="group-hdr" rowspan="2" style="text-align:left">Team</th>
+              <th class="group-hdr" rowspan="2" style="text-align:left">Conf.</th>
+              <th class="group-hdr gs" rowspan="2">Roster</th>
+              <th class="group-hdr" colspan="10">Positions</th>
+              <th class="group-hdr gs" colspan="4">Age Out</th>
+              <th class="group-hdr gs" colspan="4">Draft</th>
+              <th class="group-hdr gs" colspan="4">Transfers</th>
+              <th class="group-hdr gs" colspan="4">Remaining OF</th>
+            </tr>
+            <tr>
+              <th class="num" data-key="C">C</th>
+              <th class="num" data-key="1B">1B</th>
+              <th class="num" data-key="2B">2B</th>
+              <th class="num" data-key="3B">3B</th>
+              <th class="num" data-key="SS">SS</th>
+              <th class="num" data-key="LF_pos">LF</th>
+              <th class="num" data-key="CF_pos">CF</th>
+              <th class="num" data-key="RF_pos">RF</th>
+              <th class="num" data-key="DH">DH</th>
+              <th class="num" data-key="P">P</th>
+              <th class="num gs" data-key="AO_LF">LF</th>
+              <th class="num" data-key="AO_CF">CF</th>
+              <th class="num" data-key="AO_RF">RF</th>
+              <th class="num" data-key="TOTAL AGE OUT">Total</th>
+              <th class="num gs" data-key="DR_LF">LF</th>
+              <th class="num" data-key="DR_CF">CF</th>
+              <th class="num" data-key="DR_RF">RF</th>
+              <th class="num" data-key="TOTAL DRAFT">Total</th>
+              <th class="num gs" data-key="TR_LF">LF</th>
+              <th class="num" data-key="TR_CF">CF</th>
+              <th class="num" data-key="TR_RF">RF</th>
+              <th class="num" data-key="TOTAL TRANSFERS">Total</th>
+              <th class="num gs" data-key="Remaining LF">LF</th>
+              <th class="num" data-key="Remaining CF">CF</th>
+              <th class="num" data-key="Remaining RF">RF</th>
+              <th class="num" data-key="Remaining TOTAL OF">Total</th>
+            </tr>
+          </thead>
+          <tbody id="summary-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <span>Beyond Stats · D1 Baseball</span>
+  <span>Transfers · Hitters 2026</span>
+</footer>
+
+<script>
+function fmt(v,d){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d);}
+function fmtAvg(v){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);if(isNaN(n)||n===0)return'—';return n.toFixed(3).replace(/^0/,'');}
+function fmtInt(v){if(v===null||v===undefined||v==='')return'—';const n=parseInt(v);return isNaN(n)?'—':n;}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+const sortState={};
+
+function makeTableSortable(tableId,renderFn){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.querySelectorAll('thead th').forEach((th,i)=>{
+    th.addEventListener('click',()=>{
+      const k=tableId+'-'+i;
+      sortState[k]=sortState[k]==='asc'?'desc':'asc';
+      table.querySelectorAll('thead th').forEach(h=>{h.classList.remove('sorted-asc','sorted-desc');});
+      th.classList.add(sortState[k]==='asc'?'sorted-asc':'sorted-desc');
+      renderFn(i,sortState[k]);
+    });
+  });
+}
+
+function makeGroupedTableSortable(tableId,renderFn){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const k=th.dataset.key;
+      const dir=th.classList.contains('sorted-asc')?'desc':'asc';
+      table.querySelectorAll('thead th').forEach(h=>h.classList.remove('sorted-asc','sorted-desc'));
+      th.classList.add(dir==='asc'?'sorted-asc':'sorted-desc');
+      renderFn(k,dir);
+    });
+  });
+}
+
+function populateSelect(id,values){
+  const sel=document.getElementById(id);
+  if(!sel)return;
+  [...new Set(values.filter(Boolean))].sort().forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v;o.textContent=v;sel.appendChild(o);
+  });
+}
+
+async function loadData(){
+  try{
+    const resp=await fetch('/d1/data/2026_D1Baseball.xlsm');
+    if(!resp.ok)throw new Error('File not found ('+resp.status+'). Upload your Excel file to /d1/data/2026_D1Baseball.xlsm in your repo.');
+    const buf=await resp.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+
+    const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers']);
+    const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
+
+    // Summary has duplicate column names (LF/CF/RF repeat per category) — read as raw array and map by index
+    // Col layout (0-based): 0=Year,1=Team,2=Conference,3=Roster,4=spacer,5-14=positions,
+    //   15-16=spacers, 17=AgeOut label,18-21=AO LF/CF/RF/Total, 22=spacer, 23=Draft label,
+    //   24-27=DR LF/CF/RF/Total, 28=spacer, 29=Transfers label, 30-33=TR LF/CF/RF/Total,
+    //   34=spacer, 35=Remaining label, 36-39=Rem LF/CF/RF/Total, 40-41=spacers
+    const summaryRaw=XLSX.utils.sheet_to_json(wb.Sheets['Summary'],{header:1,defval:''});
+    const summaryData=summaryRaw.slice(1).filter(row=>row[1]).map(row=>({
+      'Team':             row[1],
+      'Conference':       row[2],
+      'CURRENT ROSTER':  row[3],
+      'C':   row[5],  '1B': row[6],  '2B': row[7],  '3B': row[8],  'SS': row[9],
+      'LF_pos': row[10], 'CF_pos': row[11], 'RF_pos': row[12], 'DH': row[13], 'P': row[14],
+      'AO_LF': row[18], 'AO_CF': row[19], 'AO_RF': row[20], 'TOTAL AGE OUT':  row[21],
+      'DR_LF': row[24], 'DR_CF': row[25], 'DR_RF': row[26], 'TOTAL DRAFT':    row[27],
+      'TR_LF': row[30], 'TR_CF': row[31], 'TR_RF': row[32], 'TOTAL TRANSFERS':row[33],
+      'Remaining LF': row[36], 'Remaining CF': row[37], 'Remaining RF': row[38], 'Remaining TOTAL OF': row[39]
+    }));
+
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    buildTransfers(transferData);
+    buildDraft(draftData);
+    buildSummary(summaryData);
+    setupTabs();
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    const err=document.getElementById('error-msg');
+    err.style.display='block';
+    err.textContent='Error loading data: '+e.message;
+    document.getElementById('app').style.display='block';
+    setupTabs();
+  }
+}
+
+function buildTransfers(data){
+  data=data.filter(r=>r.pos!=='P');
+  const avail=data.filter(r=>!r.to_school||r.to_school==='--').length;
+  document.getElementById('transfer-summary-cards').innerHTML=`
+    <div class="stat-card"><div class="s-label">Total Hitters</div><div class="s-value">${data.length}</div><div class="s-sub">In portal</div></div>
+    <div class="stat-card"><div class="s-label">Available</div><div class="s-value">${avail}</div><div class="s-sub">Not yet committed</div></div>
+    <div class="stat-card"><div class="s-label">Committed</div><div class="s-value">${data.length-avail}</div><div class="s-sub">New destination</div></div>`;
+  populateSelect('transfer-pos-filter',data.map(r=>r.pos));
+  populateSelect('transfer-conf-filter',data.map(r=>r.Conference));
+  populateSelect('transfer-school-filter',data.map(r=>r.from_school));
+
+  let sorted=[...data];
+  // Player(0) Pos(1) Cl(2) From(3) Conf(4) To(5) Status(6) AVG(7) OBP(8) SLG(9) OPS(10) GP(11) PA(12) AB(13) R(14) H(15) 2B(16) 3B(17) HR(18) RBI(19) HBP(20) BB(21) K(22) SB(23) CS(24)
+  const keys=['player','pos','class','from_school','Conference','to_school','_status','BA','OBP','SLG','OPS','GP','PA','AB','R','H','2B','3B','HR','RBI','HBP','BB','K','SB','CS'];
+  function render(ci,dir){
+    if(ci!==undefined){
+      const k=keys[ci];
+      if(k&&k!=='_status') sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
+    }
+    filterTransfers(sorted);
+  }
+  ['transfer-search','transfer-pos-filter','transfer-conf-filter','transfer-school-filter','transfer-status-filter']
+    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterTransfers(sorted)));
+  makeTableSortable('transfer-table',render);
+  filterTransfers(sorted);
+}
+
+function filterTransfers(data){
+  const q=document.getElementById('transfer-search').value.toLowerCase();
+  const pos=document.getElementById('transfer-pos-filter').value;
+  const conf=document.getElementById('transfer-conf-filter').value;
+  const school=document.getElementById('transfer-school-filter').value;
+  const status=document.getElementById('transfer-status-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.from_school||'').toLowerCase().includes(q)&&!String(r.to_school||'').toLowerCase().includes(q))return false;
+    if(pos&&r.pos!==pos)return false;
+    if(conf&&r.Conference!==conf)return false;
+    if(school&&r.from_school!==school)return false;
+    const isAvail=!r.to_school||r.to_school==='--';
+    if(status==='available'&&!isAvail)return false;
+    if(status==='committed'&&isAvail)return false;
+    return true;
+  });
+  document.getElementById('transfer-count').textContent=f.length+' players';
+  document.getElementById('transfer-body').innerHTML=f.map(r=>{
+    const isAvail=!r.to_school||r.to_school==='--';
+    return`<tr>
+      <td class="name">${esc(r.player)}</td><td>${esc(r.pos)}</td><td>${esc(r.class)}</td>
+      <td>${esc(r.from_school)}</td><td>${esc(r.Conference)}</td>
+      <td>${isAvail?'<span style="color:var(--text-muted)">—</span>':esc(r.to_school)}</td>
+      <td>${isAvail?'<span class="badge badge-available">Available</span>':'<span class="badge badge-committed">Committed</span>'}</td>
+      <td class="num">${fmtAvg(r.BA)}</td><td class="num">${fmtAvg(r.OBP)}</td><td class="num">${fmtAvg(r.SLG)}</td><td class="num">${fmtAvg(r.OPS)}</td>
+      <td class="num">${fmtInt(r.GP)}</td><td class="num">${fmtInt(r.PA)}</td><td class="num">${fmtInt(r.AB)}</td><td class="num">${fmtInt(r.R)}</td>
+      <td class="num">${fmtInt(r.H)}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.HR)}</td>
+      <td class="num">${fmtInt(r.RBI)}</td><td class="num">${fmtInt(r.HBP)}</td><td class="num">${fmtInt(r.BB)}</td><td class="num">${fmtInt(r.K)}</td>
+      <td class="num">${fmtInt(r.SB)}</td><td class="num">${fmtInt(r.CS)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function buildDraft(data){
+  populateSelect('draft-pos-filter',data.map(r=>r.Position));
+  let sorted=[...data];
+  const keys=['3/4 Rank','Player','Position','School','College / High School'];
+  function render(ci,dir){
+    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    filterDraft(sorted);
+  }
+  ['draft-search','draft-pos-filter','draft-type-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterDraft(sorted)));
+  makeTableSortable('draft-table',render);
+  filterDraft(sorted);
+}
+
+function filterDraft(data){
+  const q=document.getElementById('draft-search').value.toLowerCase();
+  const pos=document.getElementById('draft-pos-filter').value;
+  const type=document.getElementById('draft-type-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.Player||'').toLowerCase().includes(q)&&!String(r.School||'').toLowerCase().includes(q))return false;
+    if(pos&&r.Position!==pos)return false;
+    if(type&&r['College / High School']!==type)return false;
+    return true;
+  });
+  document.getElementById('draft-count').textContent=f.length+' prospects';
+  document.getElementById('draft-body').innerHTML=f.map(r=>{
+    const isHS=r['College / High School']==='High School';
+    return`<tr>
+      <td class="num">${fmtInt(r['3/4 Rank'])}</td>
+      <td class="name">${esc(r.Player)}</td>
+      <td>${esc(r.Position)}</td>
+      <td>${esc(r.School)}</td>
+      <td>${isHS?'<span class="badge badge-hs">High School</span>':'<span class="badge badge-college">College</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function buildSummary(data){
+  populateSelect('summary-conf-filter',data.map(r=>r.Conference));
+  let sorted=[...data];
+  function render(k,dir){
+    if(k) sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
+    filterSummary(sorted);
+  }
+  ['summary-search','summary-conf-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterSummary(sorted)));
+  makeGroupedTableSortable('summary-table',render);
+  filterSummary(sorted);
+}
+
+function filterSummary(data){
+  const q=document.getElementById('summary-search').value.toLowerCase();
+  const conf=document.getElementById('summary-conf-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.Team||'').toLowerCase().includes(q)&&!String(r.Conference||'').toLowerCase().includes(q))return false;
+    if(conf&&r.Conference!==conf)return false;
+    return true;
+  });
+  document.getElementById('summary-count').textContent=f.length+' teams';
+  document.getElementById('summary-body').innerHTML=f.map(r=>`<tr>
+    <td class="name">${esc(r.Team)}</td><td>${esc(r.Conference)}</td>
+    <td class="num gs">${fmtInt(r['CURRENT ROSTER'])}</td>
+    <td class="num">${fmtInt(r.C)}</td><td class="num">${fmtInt(r['1B'])}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.SS)}</td>
+    <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td><td class="num">${fmtInt(r.P)}</td>
+    <td class="num gs">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r['TOTAL AGE OUT'])}</td>
+    <td class="num gs">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r['TOTAL DRAFT'])}</td>
+    <td class="num gs">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r['TOTAL TRANSFERS'])}</td>
+    <td class="num gs">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
+  </tr>`).join('');
+}
+
+function setupTabs(){
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',e=>{
+      e.preventDefault();
+      const target=tab.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+      tab.classList.add('active');
+      document.getElementById('tab-'+target).style.display='block';
+    });
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
 
