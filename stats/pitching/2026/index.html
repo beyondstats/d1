@@ -1,1 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pitching Stats 2026 — Beyond Stats D1</title>
+  <link rel="stylesheet" href="/d1/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .loading { padding: 3rem; text-align: center; font-family: var(--mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.08em; }
+    .error { padding: 1.5rem; background: #fff5f5; border: 1px solid #fcc; color: #c00; font-size: 0.85rem; margin-bottom: 1.5rem; font-family: var(--mono); }
+    .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+    .filter-bar input, .filter-bar select { font-family: var(--mono); font-size: 0.75rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; height: 32px; }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+    .filter-bar input { width: 200px; }
+    .badge { display: inline-block; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.15rem 0.4rem; border-radius: 2px; margin-right: 2px; }
+    .badge-ao { background: #fce4ec; color: #880e4f; }
+    .badge-dr { background: #e3f2fd; color: #0d47a1; }
+    .badge-tr { background: #fff3e0; color: #bf360c; }
+    .row-count { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); margin-left: auto; align-self: center; }
+    thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
+    thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+    td.flags-cell { white-space: nowrap; min-width: 60px; }
+    .table-wrap { overflow-y: auto; max-height: calc(100vh - 280px); }
+    thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); box-shadow: 0 1px 0 var(--border); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/d1/">Beyond<span>Stats</span> · D1</a>
+  <ul class="nav-links">
+    <li><a href="/d1/">Home</a></li>
+    <li><a href="/d1/stats/hitting/2026/">Hitting</a></li>
+    <li><a href="/d1/stats/pitching/2026/" class="active">Pitching</a></li>
+    <li><a href="/d1/portal/2026/">Portal</a></li>
+  </ul>
+</nav>
+
+<main>
+  <div class="year-bar">
+    <span class="year-label">Season</span>
+    <a class="year-pill active" href="/d1/stats/pitching/2026/">2026</a>
+  </div>
+
+  <div id="error-msg" class="error" style="display:none"></div>
+  <div id="loading" class="loading">Loading data…</div>
+
+  <div id="app" style="display:none">
+    <div class="filter-bar">
+      <input type="text" id="pitching-search" placeholder="Search player or team…" />
+      <select id="pitching-pos-filter"><option value="">All Positions</option></select>
+      <select id="pitching-class-filter"><option value="">All Classes</option></select>
+      <select id="pitching-team-filter"><option value="">All Teams</option></select>
+      <select id="pitching-flag-filter">
+        <option value="">All Players</option>
+        <option value="ao">Age Out</option>
+        <option value="dr">Draft Prospect</option>
+        <option value="tr">In Transfer Portal</option>
+      </select>
+      <span class="row-count" id="pitching-count"></span>
+    </div>
+    <div class="table-wrap">
+      <div class="table-title"><h2>Player Pitching — 2026</h2></div>
+      <table id="pitching-table">
+        <thead><tr>
+          <th>Player</th><th>Team</th><th>Cl</th><th>Pos</th><th>Flags</th>
+          <th class="num">W</th><th class="num">L</th><th class="num sorted">ERA</th>
+          <th class="num">App</th><th class="num">GS</th><th class="num">CG</th><th class="num">SHO</th><th class="num">SV</th>
+          <th class="num">IP</th><th class="num">H</th><th class="num">R</th><th class="num">ER</th>
+          <th class="num">BB</th><th class="num">K</th><th class="num">HBP</th><th class="num">BAA</th>
+        </tr></thead>
+        <tbody id="pitching-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>Beyond Stats · D1 Baseball</span>
+  <span>Pitching · 2026</span>
+</footer>
+
+<script>
+function fmt(v,d){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);return isNaN(n)?'—':n.toFixed(d);}
+function fmtAvg(v){if(v===null||v===undefined||v==='')return'—';const n=parseFloat(v);if(isNaN(n)||n===0)return'—';return n.toFixed(3).replace(/^0/,'');}
+function fmtInt(v){if(v===null||v===undefined||v==='')return'—';const n=parseInt(v);return isNaN(n)?'—':n;}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function flag(v){return v&&v!==''&&v!=='0'&&v!==0&&v!==false;}
+
+function flagBadges(r){
+  let out='';
+  if(flag(r['Age Out']))  out+='<span class="badge badge-ao">AO</span>';
+  if(flag(r['Draft']))    out+='<span class="badge badge-dr">DR</span>';
+  if(flag(r['Transfer'])) out+='<span class="badge badge-tr">TR</span>';
+  return out||'<span style="color:var(--text-muted)">—</span>';
+}
+
+const sortState={};
+function makeTableSortable(tableId,renderFn){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.querySelectorAll('thead th').forEach((th,i)=>{
+    th.addEventListener('click',()=>{
+      const k=tableId+'-'+i;
+      sortState[k]=sortState[k]==='asc'?'desc':'asc';
+      table.querySelectorAll('thead th').forEach(h=>h.classList.remove('sorted-asc','sorted-desc'));
+      th.classList.add(sortState[k]==='asc'?'sorted-asc':'sorted-desc');
+      renderFn(i,sortState[k]);
+    });
+  });
+}
+
+function populateSelect(id,values){
+  const sel=document.getElementById(id);
+  if(!sel)return;
+  [...new Set(values.filter(Boolean))].sort().forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v;o.textContent=v;sel.appendChild(o);
+  });
+}
+
+async function loadData(){
+  try{
+    const resp=await fetch('/d1/data/2026_D1Baseball.xlsm');
+    if(!resp.ok)throw new Error('File not found ('+resp.status+'). Upload 2026_D1Baseball.xlsm to /d1/data/ in your repo.');
+    const buf=await resp.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const data=XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_stats_pitching']);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    buildPitching(data);
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    const err=document.getElementById('error-msg');
+    err.style.display='block';
+    err.textContent='Error loading data: '+e.message;
+    document.getElementById('app').style.display='block';
+  }
+}
+
+function buildPitching(data){
+  populateSelect('pitching-pos-filter',data.map(r=>r.pos));
+  populateSelect('pitching-class-filter',data.map(r=>r.class));
+  populateSelect('pitching-team-filter',data.map(r=>r.team));
+
+  let sorted=[...data];
+  // player(0) team(1) class(2) pos(3) flags(4) w(5) l(6) era(7) app(8) gs(9) cg(10) sho(11) sv(12) ip(13) h(14) r(15) er(16) bb(17) k(18) hbp(19) ba(20)
+  const keys=['player','team','class','pos',null,'w','l','era','app','gs','cg','sho','sv','ip','h','r','er','bb','k','hbp','ba'];
+  function render(ci,dir){
+    if(ci!==undefined){
+      const k=keys[ci];
+      if(k) sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
+    }
+    filterPitching(sorted);
+  }
+  ['pitching-search','pitching-pos-filter','pitching-class-filter','pitching-team-filter','pitching-flag-filter']
+    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterPitching(sorted)));
+  makeTableSortable('pitching-table',render);
+  filterPitching(sorted);
+}
+
+function filterPitching(data){
+  const q=document.getElementById('pitching-search').value.toLowerCase();
+  const pos=document.getElementById('pitching-pos-filter').value;
+  const cls=document.getElementById('pitching-class-filter').value;
+  const team=document.getElementById('pitching-team-filter').value;
+  const fl=document.getElementById('pitching-flag-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.team||'').toLowerCase().includes(q))return false;
+    if(pos&&r.pos!==pos)return false;
+    if(cls&&r.class!==cls)return false;
+    if(team&&r.team!==team)return false;
+    if(fl==='ao'&&!flag(r['Age Out']))return false;
+    if(fl==='dr'&&!flag(r['Draft']))return false;
+    if(fl==='tr'&&!flag(r['Transfer']))return false;
+    return true;
+  });
+  document.getElementById('pitching-count').textContent=f.length+' players';
+  document.getElementById('pitching-body').innerHTML=f.map(r=>`<tr>
+    <td class="name">${esc(r.player)}</td><td>${esc(r.team)}</td><td>${esc(r.class)}</td><td>${esc(r.pos)}</td>
+    <td class="flags-cell">${flagBadges(r)}</td>
+    <td class="num">${fmtInt(r.w)}</td><td class="num">${fmtInt(r.l)}</td><td class="num">${fmt(r.era,2)}</td>
+    <td class="num">${fmtInt(r.app)}</td><td class="num">${fmtInt(r.gs)}</td><td class="num">${fmtInt(r.cg)}</td><td class="num">${fmtInt(r.sho)}</td><td class="num">${fmtInt(r.sv)}</td>
+    <td class="num">${fmt(r.ip,1)}</td><td class="num">${fmtInt(r.h)}</td><td class="num">${fmtInt(r.r)}</td><td class="num">${fmtInt(r.er)}</td>
+    <td class="num">${fmtInt(r.bb)}</td><td class="num">${fmtInt(r.k)}</td><td class="num">${fmtInt(r.hbp)}</td><td class="num">${fmtAvg(r.ba)}</td>
+  </tr>`).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>
 
