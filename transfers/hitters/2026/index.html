@@ -86,7 +86,7 @@
         <table id="transfer-table">
           <thead><tr>
             <th>Player</th><th>Pos</th><th>Cl</th><th>From</th><th>Conference</th>
-            <th>To</th><th>Status</th>
+            <th>To</th>
             <th class="num">AVG</th><th class="num">OBP</th><th class="num">SLG</th><th class="num">OPS</th>
             <th class="num">GP</th><th class="num">PA</th><th class="num">AB</th><th class="num">R</th>
             <th class="num">H</th><th class="num">2B</th><th class="num">3B</th><th class="num">HR</th>
@@ -134,11 +134,10 @@
           <thead>
             <tr>
               <th class="group-hdr" rowspan="2" style="text-align:left">Team</th>
-              <th class="group-hdr" rowspan="2" style="text-align:left">Conf.</th>
-              <th class="group-hdr gs" colspan="10">Positions</th>
-              <th class="group-hdr gs" colspan="11">Age Out</th>
-              <th class="group-hdr gs" colspan="11">Draft</th>
-              <th class="group-hdr gs" colspan="11">Transfers</th>
+              <th class="group-hdr gs" colspan="10">Current Positions</th>
+              <th class="group-hdr gs" colspan="11">Adjustments — Age Out</th>
+              <th class="group-hdr gs" colspan="11">Adjustments — Draft</th>
+              <th class="group-hdr gs" colspan="11">Adjustments — Transfers</th>
               <th class="group-hdr gs" colspan="12">Remaining</th>
             </tr>
             <tr>
@@ -331,8 +330,8 @@ function buildTransfers(data){
   populateSelect('transfer-school-filter',data.map(r=>r.from_school));
 
   let sorted=[...data];
-  // Player(0) Pos(1) Cl(2) From(3) Conf(4) To(5) Status(6) AVG(7) OBP(8) SLG(9) OPS(10) GP(11) PA(12) AB(13) R(14) H(15) 2B(16) 3B(17) HR(18) RBI(19) HBP(20) BB(21) K(22) SB(23) CS(24)
-  const keys=['player','pos','class','from_school','Conference','to_school','_status','BA','OBP','SLG','OPS','GP','PA','AB','R','H','2B','3B','HR','RBI','HBP','BB','K','SB','CS'];
+  // Player(0) Pos(1) Cl(2) From(3) Conf(4) To(5) AVG(6) OBP(7) SLG(8) OPS(9) GP(10) PA(11) AB(12) R(13) H(14) 2B(15) 3B(16) HR(17) RBI(18) HBP(19) BB(20) K(21) SB(22) CS(23)
+  const keys=['player','pos','class','from_school','Conference','to_school','BA','OBP','SLG','OPS','GP','PA','AB','R','H','2B','3B','HR','RBI','HBP','BB','K','SB','CS'];
   function render(ci,dir){
     if(ci!==undefined){
       const k=keys[ci];
@@ -369,7 +368,6 @@ function filterTransfers(data){
       <td class="name">${esc(r.player)}</td><td>${esc(r.pos)}</td><td>${esc(r.class)}</td>
       <td>${esc(r.from_school)}</td><td>${esc(r.Conference)}</td>
       <td>${isAvail?'<span style="color:var(--text-muted)">—</span>':esc(r.to_school)}</td>
-      <td>${isAvail?'<span class="badge badge-available">Available</span>':'<span class="badge badge-committed">Committed</span>'}</td>
       <td class="num">${fmtAvg(r.BA)}</td><td class="num">${fmtAvg(r.OBP)}</td><td class="num">${fmtAvg(r.SLG)}</td><td class="num">${fmtAvg(r.OPS)}</td>
       <td class="num">${fmtInt(r.GP)}</td><td class="num">${fmtInt(r.PA)}</td><td class="num">${fmtInt(r.AB)}</td><td class="num">${fmtInt(r.R)}</td>
       <td class="num">${fmtInt(r.H)}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.HR)}</td>
@@ -416,28 +414,25 @@ function filterDraft(data){
 }
 
 function buildSummary(data){
-  populateSelect('summary-conf-filter',data.map(r=>r.Conference));
   let sorted=[...data];
   function render(k,dir){
     if(k) sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
     filterSummary(sorted);
   }
-  ['summary-search','summary-conf-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterSummary(sorted)));
+  document.getElementById('summary-search').addEventListener('input',()=>filterSummary(sorted));
   makeGroupedTableSortable('summary-table',render);
   filterSummary(sorted);
 }
 
 function filterSummary(data){
   const q=document.getElementById('summary-search').value.toLowerCase();
-  const conf=document.getElementById('summary-conf-filter').value;
   const f=data.filter(r=>{
-    if(q&&!String(r.Team||'').toLowerCase().includes(q)&&!String(r.Conference||'').toLowerCase().includes(q))return false;
-    if(conf&&r.Conference!==conf)return false;
+    if(q&&!String(r.Team||'').toLowerCase().includes(q))return false;
     return true;
   });
   document.getElementById('summary-count').textContent=f.length+' teams';
   document.getElementById('summary-body').innerHTML=f.map(r=>`<tr>
-    <td class="name">${esc(r.Team)}</td><td>${esc(r.Conference)}</td>
+    <td class="name">${esc(r.Team)}</td>
     <td class="num gs">${fmtInt(r.P_pos)}</td><td class="num">${fmtInt(r.C)}</td><td class="num">${fmtInt(r['1B'])}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.SS)}</td>
     <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td>
     <td class="num gs">${fmtInt(r.AO_P)}</td><td class="num">${fmtInt(r.AO_C)}</td><td class="num">${fmtInt(r.AO_1B)}</td><td class="num">${fmtInt(r.AO_2B)}</td><td class="num">${fmtInt(r.AO_3B)}</td><td class="num">${fmtInt(r.AO_SS)}</td>
