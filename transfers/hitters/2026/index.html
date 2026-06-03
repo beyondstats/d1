@@ -267,36 +267,40 @@ async function loadData(){
     const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers']);
     const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
 
-    // Summary has duplicate column names — read as raw array and map by index
-    // Col layout (0-based): 0=Year,1=Team,2=Conference,3-4=spacers
-    //   5=P(pitch),6=C,7=1B,8=2B,9=3B,10=SS,11=LF,12=CF,13=RF,14=DH,15-16=spacers
-    //   17=AgeOut label, 18=AO_P,19=AO_C,20=AO_1B,21=AO_2B,22=AO_3B,23=AO_SS,
-    //     24=AO_LF,25=AO_CF,26=AO_RF,27=AO_DH,28=TOTAL AGE OUT
-    //   29=spacer, 30=Draft label,
-    //     31=DR_P,32=DR_C,33=DR_1B,34=DR_2B,35=DR_3B,36=DR_SS,
-    //     37=DR_LF,38=DR_CF,39=DR_RF,40=DR_DH,41=TOTAL DRAFT
-    //   42=spacer, 43=Transfers label,
-    //     44=TR_P,45=TR_C,46=TR_1B,47=TR_2B,48=TR_3B,49=TR_SS,
-    //     50=TR_LF,51=TR_CF,52=TR_RF,53=TR_DH,54=TOTAL TRANSFERS
-    //   55=spacer, 56=Remaining label,
-    //     57=Rem_P,58=Rem_C,59=Rem_1B,60=Rem_2B,61=Rem_3B,62=Rem_SS,
-    //     63=Rem_LF,64=Rem_CF,65=Rem_RF,66=Rem_DH,67=TOTAL REMAINING,68=TOTAL REMAINING OF
-    //   70=Short List Target
-    const summaryRaw=XLSX.utils.sheet_to_json(wb.Sheets['Summary'],{header:1,defval:''});
+    // Summary: read header row first to locate each section by label name,
+    // then map data rows using offsets from section starts. This is immune to
+    // column-index shifts between openpyxl and SheetJS.
+    const summaryRaw=XLSX.utils.sheet_to_json(wb.Sheets['Summary'],{header:1,defval:null});
+    const hdr=summaryRaw[0]||[];
+    const hi=name=>hdr.indexOf(name);  // find first occurrence of label
+    // Section start indices (label col + 1 = first data col in that section)
+    const POS =hi('P');               // first P = pitcher count in Positions section
+    const AO  =hi('AGE OUT')+1;
+    const DR  =hi('DRAFT')+1;
+    const TR  =hi('TRANSFERS')+1;
+    const REM =hi('REMAINING')+1;
+    // Null-safe value accessor — returns '' for null/undefined so fmtInt shows '—'
+    const v=(row,i)=>(i>=0&&row[i]!=null)?row[i]:'';
+    // Position order within every section: P,C,1B,2B,3B,SS,LF,CF,RF,DH (+0 … +9)
     const summaryData=summaryRaw.slice(1).filter(row=>row[1]).map(row=>({
-      'Team':        row[1],
-      'Conference':  row[2],
-      'P_pos': row[5],  'C': row[6],   '1B': row[7],  '2B': row[8],  '3B': row[9],  'SS': row[10],
-      'LF_pos': row[11], 'CF_pos': row[12], 'RF_pos': row[13], 'DH': row[14],
-      'AO_P': row[18], 'AO_C': row[19], 'AO_1B': row[20], 'AO_2B': row[21], 'AO_3B': row[22], 'AO_SS': row[23],
-      'AO_LF': row[24], 'AO_CF': row[25], 'AO_RF': row[26], 'AO_DH': row[27], 'TOTAL AGE OUT': row[28],
-      'DR_P': row[31], 'DR_C': row[32], 'DR_1B': row[33], 'DR_2B': row[34], 'DR_3B': row[35], 'DR_SS': row[36],
-      'DR_LF': row[37], 'DR_CF': row[38], 'DR_RF': row[39], 'DR_DH': row[40], 'TOTAL DRAFT': row[41],
-      'TR_P': row[44], 'TR_C': row[45], 'TR_1B': row[46], 'TR_2B': row[47], 'TR_3B': row[48], 'TR_SS': row[49],
-      'TR_LF': row[50], 'TR_CF': row[51], 'TR_RF': row[52], 'TR_DH': row[53], 'TOTAL TRANSFERS': row[54],
-      'Rem_P': row[57], 'Rem_C': row[58], 'Rem_1B': row[59], 'Rem_2B': row[60], 'Rem_3B': row[61], 'Rem_SS': row[62],
-      'Remaining LF': row[63], 'Remaining CF': row[64], 'Remaining RF': row[65], 'Rem_DH': row[66],
-      'TOTAL REMAINING': row[67], 'Remaining TOTAL OF': row[68]
+      'Team':       row[1],
+      'Conference': row[2],
+      'P_pos': v(row,POS),   'C':      v(row,POS+1), '1B':    v(row,POS+2),
+      '2B':    v(row,POS+3), '3B':     v(row,POS+4), 'SS':    v(row,POS+5),
+      'LF_pos':v(row,POS+6), 'CF_pos': v(row,POS+7), 'RF_pos':v(row,POS+8), 'DH': v(row,POS+9),
+      'AO_P':  v(row,AO),   'AO_C':  v(row,AO+1), 'AO_1B': v(row,AO+2), 'AO_2B': v(row,AO+3),
+      'AO_3B': v(row,AO+4), 'AO_SS': v(row,AO+5), 'AO_LF': v(row,AO+6), 'AO_CF': v(row,AO+7),
+      'AO_RF': v(row,AO+8), 'AO_DH': v(row,AO+9), 'TOTAL AGE OUT': v(row,hi('TOTAL AGE OUT')),
+      'DR_P':  v(row,DR),   'DR_C':  v(row,DR+1), 'DR_1B': v(row,DR+2), 'DR_2B': v(row,DR+3),
+      'DR_3B': v(row,DR+4), 'DR_SS': v(row,DR+5), 'DR_LF': v(row,DR+6), 'DR_CF': v(row,DR+7),
+      'DR_RF': v(row,DR+8), 'DR_DH': v(row,DR+9), 'TOTAL DRAFT': v(row,hi('TOTAL DRAFT')),
+      'TR_P':  v(row,TR),   'TR_C':  v(row,TR+1), 'TR_1B': v(row,TR+2), 'TR_2B': v(row,TR+3),
+      'TR_3B': v(row,TR+4), 'TR_SS': v(row,TR+5), 'TR_LF': v(row,TR+6), 'TR_CF': v(row,TR+7),
+      'TR_RF': v(row,TR+8), 'TR_DH': v(row,TR+9), 'TOTAL TRANSFERS': v(row,hi('TOTAL TRANSFERS')),
+      'Rem_P':       v(row,REM),   'Rem_C':  v(row,REM+1), 'Rem_1B': v(row,REM+2), 'Rem_2B': v(row,REM+3),
+      'Rem_3B':      v(row,REM+4), 'Rem_SS': v(row,REM+5), 'Remaining LF': v(row,REM+6),
+      'Remaining CF':v(row,REM+7), 'Remaining RF': v(row,REM+8), 'Rem_DH': v(row,REM+9),
+      'TOTAL REMAINING': v(row,hi('TOTAL REMAINING')), 'Remaining TOTAL OF': v(row,hi('TOTAL REMAINING OF'))
     }));
 
     document.getElementById('loading').style.display='none';
