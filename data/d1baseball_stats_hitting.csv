@@ -3698,3 +3698,35 @@ lindenwood,Spencer Pederson,Lindenwood,JR,3B,0.167,0.219,0.367,0.585,10,32,30,3,
 lindenwood,Bret Yarger,Lindenwood,SO,LF,0.143,0.143,0.143,0.286,4,7,7,2,1,0,0,0,0,0,0,6,0,0
 lindenwood,Cade Martinez,Lindenwood,FR,LF,0.1,0.182,0.1,0.282,6,11,10,1,1,0,0,0,1,0,1,5,1,1
 lindenwood,Preston Wright,Lindenwood,JR,DH,0,0.091,0,0.091,8,11,9,1,0,0,0,0,1,0,1,4,0,0
+tnmartin,TJ Grines,Tennessee-Martin,SR,RF,0.386,0.439,0.622,1.061,55,271,241,75,93,21,3,10,56,8,17,29,66,8
+tnmartin,Colten Payton,Tennessee-Martin,JR,C,0.344,0.409,0.502,0.911,55,257,221,45,76,16,2,5,58,3,26,38,4,2
+tnmartin,T.J. Dunsford,Tennessee-Martin,JR,DH,0.337,0.403,0.582,0.985,52,233,208,36,70,16,1,11,62,7,17,32,5,1
+tnmartin,Garner Anderson,Tennessee-Martin,JR,CF,0.333,0.432,0.562,0.994,48,194,162,44,54,12,2,7,31,6,23,41,12,2
+tnmartin,JT Popick,Tennessee-Martin,JR,1B,0.298,0.359,0.399,0.758,52,226,198,36,59,14,0,2,34,1,20,27,5,2
+tnmartin,Andrew Davis,Tennessee-Martin,JR,2B,0.298,0.414,0.371,0.785,55,259,205,53,61,12,0,1,32,13,32,40,25,12
+tnmartin,Cameron Greene,Tennessee-Martin,SO,3B,0.292,0.372,0.553,0.924,46,187,161,34,47,11,2,9,33,8,13,52,6,3
+tnmartin,Andrew Lawrence,Tennessee-Martin,SO,SS,0.34,0.409,0.514,0.922,36,164,144,31,49,14,1,3,25,5,13,26,8,2
+tnmartin,Tommy Koch,Tennessee-Martin,JR,C,0.295,0.415,0.397,0.812,25,101,78,20,23,2,0,2,15,5,11,14,1,1
+tnmartin,Amari Conley,Tennessee-Martin,SO,LF,0.284,0.37,0.389,0.76,30,109,95,18,27,6,2,0,13,0,13,17,3,1
+tnmartin,Eli Huebner,Tennessee-Martin,SR,3B,0.279,0.29,0.393,0.684,20,62,61,12,17,4,0,1,8,0,1,16,2,0
+tnmartin,Bo Strickland,Tennessee-Martin,FR,CF,0.273,0.36,0.375,0.735,29,103,88,16,24,7,1,0,14,1,11,17,7,2
+tnmartin,Cullen Box,Tennessee-Martin,JR,C,0.22,0.389,0.439,0.828,16,55,41,9,9,1,1,2,6,4,8,9,1,0
+southern-indiana,Hunter Miller,Southern Indiana,SR,LF,0.382,0.49,0.561,1.051,46,155,123,26,47,9,2,3,19,3,23,23,3,1
+southern-indiana,Patrick McLellan,Southern Indiana,SR,1B,0.347,0.444,0.489,0.933,58,270,225,59,78,15,1,5,49,15,26,22,7,2
+southern-indiana,Noah Foster,Southern Indiana,GR,RF,0.345,0.44,0.503,0.943,51,212,177,44,61,11,4,3,32,11,20,24,13,5
+southern-indiana,Clayton Slack,Southern Indiana,SR,SS,0.323,0.417,0.404,0.821,58,269,223,44,72,7,1,3,40,13,26,27,10,3
+southern-indiana,Micajah Wall,Southern Indiana,SR,C,0.298,0.389,0.42,0.809,52,218,181,33,54,5,1,5,46,4,24,31,4,4
+southern-indiana,Khi Holiday,Southern Indiana,GR,CF,0.284,0.427,0.337,0.764,57,268,208,57,59,6,1,1,20,16,37,31,19,2
+southern-indiana,Parker Martin,Southern Indiana,JR,3B,0.272,0.34,0.387,0.727,55,245,217,38,59,13,0,4,39,5,18,25,3,1
+southern-indiana,Ethan Rothschild,Southern Indiana,JR,LF,0.333,0.5,0.4,0.9,16,23,15,5,5,1,0,0,2,3,3,1,0,2
+southern-indiana,Jesse Velders,Southern Indiana,GR,RF,0.303,0.425,0.434,0.86,36,128,99,19,30,10,0,1,25,8,16,22,1,1
+southern-indiana,Ryan Skwarek,Southern Indiana,JR,2B,0.286,0.444,0.429,0.873,12,40,28,7,8,1,0,1,6,5,3,4,0,0
+southern-indiana,Collin Senior,Southern Indiana,JR,3B,0.276,0.301,0.31,0.611,34,96,87,12,24,1,1,0,16,0,4,14,3,0
+southern-indiana,Drue Saenz,Southern Indiana,JR,C,0.262,0.319,0.352,0.67,42,161,145,21,38,5,1,2,25,4,9,20,2,1
+southern-indiana,Dane DeWees,Southern Indiana,JR,LF,0.233,0.281,0.3,0.581,15,35,30,12,7,2,0,0,4,0,2,6,5,3
+southern-indiana,Zion Stephens,Southern Indiana,JR,2B,0.217,0.301,0.283,0.584,37,109,92,18,20,4,1,0,15,6,5,27,2,1
+southern-indiana,Skylar Graham,Southern Indiana,JR,2B,0.167,0.278,0.2,0.478,15,37,30,3,5,1,0,0,4,0,5,8,0,0
+southern-indiana,Gavyn Boyle,Southern Indiana,SR,DH,0.133,0.152,0.222,0.374,17,46,45,2,6,1,0,1,5,1,0,14,0,0
+southern-indiana,Charlie Marisca,Southern Indiana,SR,DH,0.118,0.211,0.118,0.328,14,20,17,1,2,0,0,0,3,1,1,7,0,0
+southern-indiana,Evan Zapp,Southern Indiana,JR,LF,0.111,0.333,0.111,0.444,10,12,9,1,1,0,0,0,1,0,3,4,0,0
+southern-indiana,Evan McCarthy,Southern Indiana,SR,,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0
