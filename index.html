@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Beyond Stats — D1 Baseball</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     .hero {
       background: var(--surface);
@@ -108,6 +109,13 @@
     </div>
   </section>
 
+  <section class="section">
+    <div class="section-title">Summary</div>
+    <div id="portal-summary" class="stat-grid">
+      <div class="stat-card"><div class="s-label">Transfer Portal</div><div class="s-value" id="sum-loading" style="font-family:var(--mono);font-size:0.8rem;color:var(--text-muted)">Loading…</div></div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -115,5 +123,32 @@
   <span>2026 Season</span>
 </footer>
 
+<script>
+async function loadPortalSummary(){
+  try{
+    const resp=await fetch('/d1/data/2026_D1Baseball.xlsm');
+    if(!resp.ok)throw new Error('unavailable');
+    const buf=await resp.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const data=XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers']);
+
+    const hitters=data.filter(r=>r.pos!=='P');
+    const pitchers=data.filter(r=>r.pos==='P');
+    const hAvail=hitters.filter(r=>!r.to_school||r.to_school==='--').length;
+    const pAvail=pitchers.filter(r=>!r.to_school||r.to_school==='--').length;
+
+    document.getElementById('portal-summary').innerHTML=`
+      <div class="stat-card"><div class="s-label">Hitters in Portal</div><div class="s-value">${hitters.length}</div><div class="s-sub">Total</div></div>
+      <div class="stat-card"><div class="s-label">Hitters Available</div><div class="s-value">${hAvail}</div><div class="s-sub">Not yet committed</div></div>
+      <div class="stat-card"><div class="s-label">Hitters Committed</div><div class="s-value">${hitters.length-hAvail}</div><div class="s-sub">New destination</div></div>
+      <div class="stat-card"><div class="s-label">Pitchers in Portal</div><div class="s-value">${pitchers.length}</div><div class="s-sub">Total</div></div>
+      <div class="stat-card"><div class="s-label">Pitchers Available</div><div class="s-value">${pAvail}</div><div class="s-sub">Not yet committed</div></div>
+      <div class="stat-card"><div class="s-label">Pitchers Committed</div><div class="s-value">${pitchers.length-pAvail}</div><div class="s-sub">New destination</div></div>`;
+  }catch(e){
+    document.getElementById('portal-summary').innerHTML='<div class="stat-card"><div class="s-label">Transfer Portal</div><div class="s-value" style="font-size:0.8rem;color:var(--text-muted)">Unavailable</div></div>';
+  }
+}
+loadPortalSummary();
+</script>
 </body>
 </html>
