@@ -58,7 +58,6 @@
   <div id="app" style="display:none">
     <div class="tabs">
       <a class="tab active" href="#" data-tab="transfers">Transfer Portal</a>
-      <a class="tab" href="#" data-tab="draft">Draft Prospects</a>
       <a class="tab" href="#" data-tab="summary">Team Summary</a>
     </div>
 
@@ -95,28 +94,6 @@
     </div>
 
     <!-- DRAFT -->
-    <div id="tab-draft" class="tab-panel" style="display:none">
-      <div class="filter-bar">
-        <input type="text" id="draft-search" placeholder="Search player or school…" />
-        <select id="draft-pos-filter"><option value="">All Positions</option></select>
-        <select id="draft-type-filter">
-          <option value="">All</option>
-          <option value="College">College</option>
-          <option value="High School">High School</option>
-        </select>
-        <span class="row-count" id="draft-count"></span>
-      </div>
-      <div class="table-wrap">
-        <div class="table-title"><h2>Draft Prospects — 2026</h2></div>
-        <table id="draft-table">
-          <thead><tr>
-            <th class="num">Rank</th><th>Player</th><th>Pos</th><th>School</th><th>Level</th><th>Bats</th><th>Throws</th><th>Ht</th><th class="num">Wt</th><th class="num">Age</th>
-          </tr></thead>
-          <tbody id="draft-body"></tbody>
-        </table>
-      </div>
-    </div>
-
     <!-- SUMMARY -->
     <div id="tab-summary" class="tab-panel" style="display:none">
       <div class="filter-bar">
@@ -260,7 +237,6 @@ async function loadData(){
     const wb=XLSX.read(buf,{type:'array'});
 
     const transferData =XLSX.utils.sheet_to_json(wb.Sheets['d1baseball_transfers']);
-    const draftData    =XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
 
     // Summary: read header row first to locate each section by label name,
     // then map data rows using offsets from section starts. This is immune to
@@ -301,7 +277,6 @@ async function loadData(){
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
     buildTransfers(transferData);
-    buildDraft(draftData);
     buildSummary(summaryData);
     setupTabs();
   }catch(e){
@@ -369,47 +344,6 @@ function filterTransfers(data){
       <td class="num">${fmtInt(r.H)}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.HR)}</td>
       <td class="num">${fmtInt(r.RBI)}</td><td class="num">${fmtInt(r.HBP)}</td><td class="num">${fmtInt(r.BB)}</td><td class="num">${fmtInt(r.K)}</td>
       <td class="num">${fmtInt(r.SB)}</td><td class="num">${fmtInt(r.CS)}</td>
-    </tr>`;
-  }).join('');
-}
-
-function buildDraft(data){
-  populateSelect('draft-pos-filter',data.map(r=>r.position));
-  let sorted=[...data];
-  const keys=['rank','player_name','position','school','school_type','bats','throws','height','weight','age'];
-  function render(ci,dir){
-    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
-    filterDraft(sorted);
-  }
-  ['draft-search','draft-pos-filter','draft-type-filter'].forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterDraft(sorted)));
-  makeTableSortable('draft-table',render);
-  filterDraft(sorted);
-}
-
-function filterDraft(data){
-  const q=document.getElementById('draft-search').value.toLowerCase();
-  const pos=document.getElementById('draft-pos-filter').value;
-  const type=document.getElementById('draft-type-filter').value;
-  const f=data.filter(r=>{
-    if(q&&!String(r.player_name||'').toLowerCase().includes(q)&&!String(r.school||'').toLowerCase().includes(q))return false;
-    if(pos&&r.position!==pos)return false;
-    if(type&&r.school_type!==type)return false;
-    return true;
-  });
-  document.getElementById('draft-count').textContent=f.length+' prospects';
-  document.getElementById('draft-body').innerHTML=f.map(r=>{
-    const isHS=r.school_type==='High School';
-    return`<tr>
-      <td class="num">${fmtInt(r.rank)}</td>
-      <td class="name">${esc(r.player_name)}</td>
-      <td>${esc(r.position)}</td>
-      <td>${esc(r.school)}</td>
-      <td>${isHS?'<span class="badge badge-hs">High School</span>':'<span class="badge badge-college">College</span>'}</td>
-      <td>${esc(r.bats)}</td>
-      <td>${esc(r.throws)}</td>
-      <td>${esc(r.height)}</td>
-      <td class="num">${fmtInt(r.weight)}</td>
-      <td class="num">${fmtInt(r.age)}</td>
     </tr>`;
   }).join('');
 }
