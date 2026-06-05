@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Draft Prospects 2026 — Beyond Stats D1</title>
+  <link rel="stylesheet" href="/d1/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    .loading { padding: 3rem; text-align: center; font-family: var(--mono); font-size: 0.8rem; color: var(--text-muted); letter-spacing: 0.08em; }
+    .error { padding: 1.5rem; background: #fff5f5; border: 1px solid #fcc; color: #c00; font-size: 0.85rem; margin-bottom: 1.5rem; font-family: var(--mono); }
+    .filter-bar { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+    .filter-bar input, .filter-bar select { font-family: var(--mono); font-size: 0.75rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; height: 32px; }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+    .filter-bar input { width: 200px; }
+    .badge { display: inline-block; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.15rem 0.4rem; border-radius: 2px; margin-right: 2px; }
+    .badge-hs { background: #fff3e0; color: #e65100; }
+    .badge-college { background: #f3e5f5; color: #6a1b9a; }
+    .row-count { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); margin-left: auto; align-self: center; }
+    thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
+    thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+    .table-wrap { overflow-y: auto; max-height: calc(100vh - 280px); }
+    thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); box-shadow: 0 1px 0 var(--border); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/d1/">Beyond<span>Stats</span> · D1</a>
+  <ul class="nav-links">
+    <li><a href="/d1/">Home</a></li>
+    <li><a href="/d1/stats/hitting/2026/stats_hitting_2026.html">Hitting</a></li>
+    <li><a href="/d1/stats/pitching/2026/stats_pitching_2026.html">Pitching</a></li>
+    <li><a href="/d1/transfers/hitters/2026/transfers_hitters_2026.html">Transfers — H</a></li>
+    <li><a href="/d1/transfers/pitchers/2026/transfers_pitchers_2026.html">Transfers — P</a></li>
+    <li><a href="/d1/draft_prospects_2026.html" class="active">Draft</a></li>
+  </ul>
+</nav>
+
+<main>
+  <div id="error-msg" class="error" style="display:none"></div>
+  <div id="loading" class="loading">Loading data…</div>
+
+  <div id="app" style="display:none">
+    <div class="filter-bar">
+      <input type="text" id="draft-search" placeholder="Search player or school…" />
+      <select id="draft-pos-filter"><option value="">All Positions</option></select>
+      <select id="draft-type-filter">
+        <option value="">All</option>
+        <option value="College">College</option>
+        <option value="High School">High School</option>
+      </select>
+      <span class="row-count" id="draft-count"></span>
+    </div>
+    <div class="table-wrap">
+      <div class="table-title"><h1 style="font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;margin-bottom:1rem;">Draft Prospects — 2026</h1></div>
+      <table id="draft-table">
+        <thead><tr>
+          <th class="num">Rank</th><th>Player</th><th>Pos</th><th>School</th><th>Level</th><th>Bats</th><th>Throws</th><th>Ht</th><th class="num">Wt</th><th class="num">Age</th>
+        </tr></thead>
+        <tbody id="draft-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>Beyond Stats · D1 Baseball</span>
+  <span>Draft Prospects · 2026</span>
+</footer>
+
+<script>
+function fmtInt(v){if(v===null||v===undefined||v==='')return'—';const n=parseInt(v);return isNaN(n)?'—':n;}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+const sortState={};
+function makeTableSortable(tableId,renderFn){
+  const table=document.getElementById(tableId);
+  if(!table)return;
+  table.querySelectorAll('thead th').forEach((th,i)=>{
+    th.addEventListener('click',()=>{
+      const k=tableId+'-'+i;
+      sortState[k]=sortState[k]==='asc'?'desc':'asc';
+      table.querySelectorAll('thead th').forEach(h=>h.classList.remove('sorted-asc','sorted-desc'));
+      th.classList.add(sortState[k]==='asc'?'sorted-asc':'sorted-desc');
+      renderFn(i,sortState[k]);
+    });
+  });
+}
+
+function populateSelect(id,values){
+  const sel=document.getElementById(id);
+  if(!sel)return;
+  [...new Set(values.filter(Boolean))].sort().forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v;o.textContent=v;sel.appendChild(o);
+  });
+}
+
+async function loadData(){
+  try{
+    const resp=await fetch('/d1/data/2026_D1Baseball.xlsm');
+    if(!resp.ok)throw new Error('File not found ('+resp.status+'). Upload 2026_D1Baseball.xlsm to /d1/data/ in your repo.');
+    const buf=await resp.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const data=XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    buildDraft(data);
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    const err=document.getElementById('error-msg');
+    err.style.display='block';
+    err.textContent='Error loading data: '+e.message;
+    document.getElementById('app').style.display='block';
+  }
+}
+
+function buildDraft(data){
+  populateSelect('draft-pos-filter',data.map(r=>r.position));
+  let sorted=[...data];
+  const keys=['rank','player_name','position','school','school_type','bats','throws','height','weight','age'];
+  function render(ci,dir){
+    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
+    filterDraft(sorted);
+  }
+  ['draft-search','draft-pos-filter','draft-type-filter']
+    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterDraft(sorted)));
+  makeTableSortable('draft-table',render);
+  filterDraft(sorted);
+}
+
+function filterDraft(data){
+  const q=document.getElementById('draft-search').value.toLowerCase();
+  const pos=document.getElementById('draft-pos-filter').value;
+  const type=document.getElementById('draft-type-filter').value;
+  const f=data.filter(r=>{
+    if(q&&!String(r.player_name||'').toLowerCase().includes(q)&&!String(r.school||'').toLowerCase().includes(q))return false;
+    if(pos&&r.position!==pos)return false;
+    if(type&&r.school_type!==type)return false;
+    return true;
+  });
+  document.getElementById('draft-count').textContent=f.length+' prospects';
+  document.getElementById('draft-body').innerHTML=f.map(r=>{
+    const isHS=r.school_type==='High School';
+    return`<tr>
+      <td class="num">${fmtInt(r.rank)}</td>
+      <td class="name">${esc(r.player_name)}</td>
+      <td>${esc(r.position)}</td>
+      <td>${esc(r.school)}</td>
+      <td>${isHS?'<span class="badge badge-hs">High School</span>':'<span class="badge badge-college">College</span>'}</td>
+      <td>${esc(r.bats)}</td>
+      <td>${esc(r.throws)}</td>
+      <td>${esc(r.height)}</td>
+      <td class="num">${fmtInt(r.weight)}</td>
+      <td class="num">${fmtInt(r.age)}</td>
+    </tr>`;
+  }).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>
