@@ -103,7 +103,7 @@
         <div class="table-title"><h2>Draft Prospects — 2026</h2></div>
         <table id="draft-table">
           <thead><tr>
-            <th class="num">Rank</th><th>Player</th><th>Pos</th><th>School</th><th>Level</th>
+            <th class="num">Rank</th><th>Player</th><th>Pos</th><th>School</th><th>Level</th><th>Bats</th><th>Throws</th><th>Ht</th><th class="num">Wt</th><th class="num">Age</th>
           </tr></thead>
           <tbody id="draft-body"></tbody>
         </table>
@@ -356,9 +356,9 @@ function filterTransfers(data){
 }
 
 function buildDraft(data){
-  populateSelect('draft-pos-filter',data.map(r=>r.Position));
+  populateSelect('draft-pos-filter',data.map(r=>r.position));
   let sorted=[...data];
-  const keys=['3/4 Rank','Player','Position','School','College / High School'];
+  const keys=['rank','player_name','position','school','school_type','bats','throws','height','weight','age'];
   function render(ci,dir){
     if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
     filterDraft(sorted);
@@ -373,20 +373,25 @@ function filterDraft(data){
   const pos=document.getElementById('draft-pos-filter').value;
   const type=document.getElementById('draft-type-filter').value;
   const f=data.filter(r=>{
-    if(q&&!String(r.Player||'').toLowerCase().includes(q)&&!String(r.School||'').toLowerCase().includes(q))return false;
-    if(pos&&r.Position!==pos)return false;
-    if(type&&r['College / High School']!==type)return false;
+    if(q&&!String(r.player_name||'').toLowerCase().includes(q)&&!String(r.school||'').toLowerCase().includes(q))return false;
+    if(pos&&r.position!==pos)return false;
+    if(type&&r.school_type!==type)return false;
     return true;
   });
   document.getElementById('draft-count').textContent=f.length+' prospects';
   document.getElementById('draft-body').innerHTML=f.map(r=>{
-    const isHS=r['College / High School']==='High School';
+    const isHS=r.school_type==='High School';
     return`<tr>
-      <td class="num">${fmtInt(r['3/4 Rank'])}</td>
-      <td class="name">${esc(r.Player)}</td>
-      <td>${esc(r.Position)}</td>
-      <td>${esc(r.School)}</td>
+      <td class="num">${fmtInt(r.rank)}</td>
+      <td class="name">${esc(r.player_name)}</td>
+      <td>${esc(r.position)}</td>
+      <td>${esc(r.school)}</td>
       <td>${isHS?'<span class="badge badge-hs">High School</span>':'<span class="badge badge-college">College</span>'}</td>
+      <td>${esc(r.bats)}</td>
+      <td>${esc(r.throws)}</td>
+      <td>${esc(r.height)}</td>
+      <td class="num">${fmtInt(r.weight)}</td>
+      <td class="num">${fmtInt(r.age)}</td>
     </tr>`;
   }).join('');
 }
