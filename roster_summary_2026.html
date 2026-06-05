@@ -62,6 +62,7 @@
             <th class="group-hdr gs" colspan="10">Adjustments — Age Out</th>
             <th class="group-hdr gs" colspan="10">Adjustments — Draft</th>
             <th class="group-hdr gs" colspan="10">Adjustments — Transfers</th>
+            <th class="group-hdr gs" colspan="10">Commits</th>
             <th class="group-hdr gs" colspan="12">Remaining</th>
           </tr>
           <tr>
@@ -105,6 +106,16 @@
             <th class="num" data-key="TR_CF">CF</th>
             <th class="num" data-key="TR_RF">RF</th>
             <th class="num" data-key="TR_DH">DH</th>
+            <th class="num gs" data-key="CM_P">P</th>
+            <th class="num" data-key="CM_C">C</th>
+            <th class="num" data-key="CM_1B">1B</th>
+            <th class="num" data-key="CM_2B">2B</th>
+            <th class="num" data-key="CM_3B">3B</th>
+            <th class="num" data-key="CM_SS">SS</th>
+            <th class="num" data-key="CM_LF">LF</th>
+            <th class="num" data-key="CM_CF">CF</th>
+            <th class="num" data-key="CM_RF">RF</th>
+            <th class="num" data-key="CM_UT">UT</th>
             <th class="num gs" data-key="Rem_P">P</th>
             <th class="num" data-key="Rem_C">C</th>
             <th class="num" data-key="Rem_1B">1B</th>
@@ -164,6 +175,7 @@ async function loadData(){
     const AO  =hi('AGE OUT')+1;
     const DR  =hi('DRAFT')+1;
     const TR  =hi('TRANSFERS')+1;
+    const CM  =hi('COMMITS')+1;
     const REM =hi('REMAINING')+1;
     const v=(row,i)=>(i>=0&&row[i]!=null)?row[i]:'';
     const summaryData=summaryRaw.slice(1).filter(row=>row[1]).map(row=>({
@@ -181,6 +193,9 @@ async function loadData(){
       'TR_P':  v(row,TR),   'TR_C':  v(row,TR+1), 'TR_1B': v(row,TR+2), 'TR_2B': v(row,TR+3),
       'TR_3B': v(row,TR+4), 'TR_SS': v(row,TR+5), 'TR_LF': v(row,TR+6), 'TR_CF': v(row,TR+7),
       'TR_RF': v(row,TR+8), 'TR_DH': v(row,TR+9), 'TOTAL TRANSFERS': v(row,hi('TOTAL TRANSFERS')),
+      'CM_P':  v(row,CM),   'CM_C':  v(row,CM+1), 'CM_1B': v(row,CM+2), 'CM_2B': v(row,CM+3),
+      'CM_3B': v(row,CM+4), 'CM_SS': v(row,CM+5), 'CM_LF': v(row,CM+6), 'CM_CF': v(row,CM+7),
+      'CM_RF': v(row,CM+8), 'CM_UT': v(row,CM+9),
       'Rem_P':       v(row,REM),   'Rem_C':  v(row,REM+1), 'Rem_1B': v(row,REM+2), 'Rem_2B': v(row,REM+3),
       'Rem_3B':      v(row,REM+4), 'Rem_SS': v(row,REM+5), 'Remaining LF': v(row,REM+6),
       'Remaining CF':v(row,REM+7), 'Remaining RF': v(row,REM+8), 'Rem_DH': v(row,REM+9),
@@ -227,6 +242,8 @@ function filterSummary(data){
     <td class="num">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r.DR_DH)}</td>
     <td class="num gs">${fmtInt(r.TR_P)}</td><td class="num">${fmtInt(r.TR_C)}</td><td class="num">${fmtInt(r.TR_1B)}</td><td class="num">${fmtInt(r.TR_2B)}</td><td class="num">${fmtInt(r.TR_3B)}</td><td class="num">${fmtInt(r.TR_SS)}</td>
     <td class="num">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r.TR_DH)}</td>
+    <td class="num gs">${fmtInt(r.CM_P)}</td><td class="num">${fmtInt(r.CM_C)}</td><td class="num">${fmtInt(r.CM_1B)}</td><td class="num">${fmtInt(r.CM_2B)}</td><td class="num">${fmtInt(r.CM_3B)}</td><td class="num">${fmtInt(r.CM_SS)}</td>
+    <td class="num">${fmtInt(r.CM_LF)}</td><td class="num">${fmtInt(r.CM_CF)}</td><td class="num">${fmtInt(r.CM_RF)}</td><td class="num">${fmtInt(r.CM_UT)}</td>
     <td class="num gs">${fmtInt(r.Rem_P)}</td><td class="num">${fmtInt(r.Rem_C)}</td><td class="num">${fmtInt(r.Rem_1B)}</td><td class="num">${fmtInt(r.Rem_2B)}</td><td class="num">${fmtInt(r.Rem_3B)}</td><td class="num">${fmtInt(r.Rem_SS)}</td>
     <td class="num">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r.Rem_DH)}</td>
     <td class="num">${fmtInt(r['TOTAL REMAINING'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
