@@ -58,11 +58,11 @@
         <thead>
           <tr>
             <th class="group-hdr" rowspan="2" style="text-align:left">Team</th>
-            <th class="group-hdr gs" colspan="10">Current Positions</th>
+            <th class="group-hdr gs" colspan="10">2026 Roster</th>
             <th class="group-hdr gs" colspan="10">Adjustments — Age Out</th>
             <th class="group-hdr gs" colspan="10">Adjustments — Draft</th>
             <th class="group-hdr gs" colspan="10">Adjustments — Transfers</th>
-            <th class="group-hdr gs" colspan="10">Commits</th>
+            <th class="group-hdr gs" colspan="10">Adjustments — Commits</th>
             <th class="group-hdr gs" colspan="12">Remaining</th>
           </tr>
           <tr>
@@ -170,14 +170,15 @@ async function loadData(){
 
     const summaryRaw=XLSX.utils.sheet_to_json(wb.Sheets['Summary'],{header:1,defval:null});
     const hdr=summaryRaw[0]||[];
-    const hi=name=>hdr.indexOf(name);
+    const hi=name=>{const idx=hdr.indexOf(name);return idx;};
+    const sec=name=>{const idx=hi(name);return idx>=0?idx+1:-1;};
     const POS =hi('P');
-    const AO  =hi('AGE OUT')+1;
-    const DR  =hi('DRAFT')+1;
-    const TR  =hi('TRANSFERS')+1;
-    const CM  =hi('COMMITS')+1;
-    const REM =hi('REMAINING')+1;
-    const v=(row,i)=>(i>=0&&row[i]!=null)?row[i]:'';
+    const AO  =sec('AGE OUT');
+    const DR  =sec('DRAFT');
+    const TR  =sec('TRANSFERS');
+    const CM  =sec('COMMITS');
+    const REM =sec('REMAINING');
+const v=(row,i)=>(i>=0&&row[i]!=null)?row[i]:'';
     const summaryData=summaryRaw.slice(1).filter(row=>row[1]).map(row=>({
       'Team':       row[1],
       'Conference': row[2],
