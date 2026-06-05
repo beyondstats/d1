@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Draft Prospects 2026 — Beyond Stats D1</title>
+  <title>Commitments 2026 — Beyond Stats D1</title>
   <link rel="stylesheet" href="/d1/style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
@@ -13,9 +13,6 @@
     .filter-bar input, .filter-bar select { font-family: var(--mono); font-size: 0.75rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; height: 32px; }
     .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
     .filter-bar input { width: 200px; }
-    .badge { display: inline-block; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.15rem 0.4rem; border-radius: 2px; margin-right: 2px; }
-    .badge-hs { background: #fff3e0; color: #e65100; }
-    .badge-college { background: #f3e5f5; color: #6a1b9a; }
     .row-count { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); margin-left: auto; align-self: center; }
     thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
     thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
@@ -33,9 +30,9 @@
     <li><a href="/d1/stats/pitching/2026/stats_pitching_2026.html">Stats — P</a></li>
     <li><a href="/d1/transfers/hitters/2026/transfers_hitters_2026.html">Transfers — H</a></li>
     <li><a href="/d1/transfers/pitchers/2026/transfers_pitchers_2026.html">Transfers — P</a></li>
-    <li><a href="/d1/draft_prospects_2026.html" class="active">Draft</a></li>
+    <li><a href="/d1/draft_prospects_2026.html">Draft</a></li>
     <li><a href="/d1/roster_summary_2026.html">Roster Summary</a></li>
-    <li><a href="/d1/commits_2026.html">Commits</a></li>
+    <li><a href="/d1/commits_2026.html" class="active">Commits</a></li>
   </ul>
 </nav>
 
@@ -45,22 +42,20 @@
 
   <div id="app" style="display:none">
     <div class="filter-bar">
-      <input type="text" id="draft-search" placeholder="Search player or school…" />
-      <select id="draft-pos-filter"><option value="">All Positions</option></select>
-      <select id="draft-type-filter">
-        <option value="">All</option>
-        <option value="College">College</option>
-        <option value="High School">High School</option>
-      </select>
-      <span class="row-count" id="draft-count"></span>
+      <input type="text" id="commits-search" placeholder="Search player, college, or school…" />
+      <select id="commits-pos-filter"><option value="">All Positions</option></select>
+      <select id="commits-college-filter"><option value="">All Colleges</option></select>
+      <select id="commits-state-filter"><option value="">All States</option></select>
+      <span class="row-count" id="commits-count"></span>
     </div>
     <div class="table-wrap">
-      <div class="table-title"><h1 style="font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;margin-bottom:1rem;">Draft Prospects — 2026</h1></div>
-      <table id="draft-table">
+      <div class="table-title"><h1 style="font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;margin-bottom:1rem;">Commitments — 2026</h1></div>
+      <table id="commits-table">
         <thead><tr>
-          <th class="num">Rank</th><th>Player</th><th>Pos</th><th>School</th><th>Level</th><th>Bats</th><th>Throws</th><th>Ht</th><th class="num">Wt</th><th class="num">Age</th>
+          <th>Player</th><th>Pos</th><th>College</th><th>Ht</th><th class="num">Wt</th>
+          <th>BT</th><th>High School</th><th>Hometown</th><th>St</th><th>Draft</th>
         </tr></thead>
-        <tbody id="draft-body"></tbody>
+        <tbody id="commits-body"></tbody>
       </table>
     </div>
   </div>
@@ -68,7 +63,7 @@
 
 <footer>
   <span>Beyond Stats · D1 Baseball</span>
-  <span>Draft Prospects · 2026</span>
+  <span>Commitments · 2026</span>
 </footer>
 
 <script>
@@ -105,10 +100,10 @@ async function loadData(){
     if(!resp.ok)throw new Error('File not found ('+resp.status+'). Upload 2026_D1Baseball.xlsm to /d1/data/ in your repo.');
     const buf=await resp.arrayBuffer();
     const wb=XLSX.read(buf,{type:'array'});
-    const data=XLSX.utils.sheet_to_json(wb.Sheets['draft_prospects']);
+    const data=XLSX.utils.sheet_to_json(wb.Sheets['perfectgame_commitments']);
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
-    buildDraft(data);
+    buildCommits(data);
   }catch(e){
     document.getElementById('loading').style.display='none';
     const err=document.getElementById('error-msg');
@@ -118,46 +113,51 @@ async function loadData(){
   }
 }
 
-function buildDraft(data){
-  populateSelect('draft-pos-filter',data.map(r=>r.position));
+function buildCommits(data){
+  populateSelect('commits-pos-filter',data.map(r=>r.pos));
+  populateSelect('commits-college-filter',data.map(r=>r.college));
+  populateSelect('commits-state-filter',data.map(r=>r.state));
+
   let sorted=[...data];
-  const keys=['rank','player_name','position','school','school_type','bats','throws','height','weight','age'];
+  const keys=['player','pos','college','height','weight','bats_throws','high_school','hometown','state','draft'];
   function render(ci,dir){
-    if(ci!==undefined){const k=keys[ci];sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});}
-    filterDraft(sorted);
+    if(ci!==undefined){
+      const k=keys[ci];
+      if(k) sorted.sort((a,b)=>{const av=parseFloat(a[k])||a[k]||'';const bv=parseFloat(b[k])||b[k]||'';return dir==='asc'?(av<bv?-1:av>bv?1:0):(av<bv?1:av>bv?-1:0);});
+    }
+    filterCommits(sorted);
   }
-  ['draft-search','draft-pos-filter','draft-type-filter']
-    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterDraft(sorted)));
-  makeTableSortable('draft-table',render);
-  filterDraft(sorted);
+  ['commits-search','commits-pos-filter','commits-college-filter','commits-state-filter']
+    .forEach(id=>document.getElementById(id).addEventListener(id.includes('search')?'input':'change',()=>filterCommits(sorted)));
+  makeTableSortable('commits-table',render);
+  filterCommits(sorted);
 }
 
-function filterDraft(data){
-  const q=document.getElementById('draft-search').value.toLowerCase();
-  const pos=document.getElementById('draft-pos-filter').value;
-  const type=document.getElementById('draft-type-filter').value;
+function filterCommits(data){
+  const q=document.getElementById('commits-search').value.toLowerCase();
+  const pos=document.getElementById('commits-pos-filter').value;
+  const college=document.getElementById('commits-college-filter').value;
+  const state=document.getElementById('commits-state-filter').value;
   const f=data.filter(r=>{
-    if(q&&!String(r.player_name||'').toLowerCase().includes(q)&&!String(r.school||'').toLowerCase().includes(q))return false;
-    if(pos&&r.position!==pos)return false;
-    if(type&&r.school_type!==type)return false;
+    if(q&&!String(r.player||'').toLowerCase().includes(q)&&!String(r.college||'').toLowerCase().includes(q)&&!String(r.high_school||'').toLowerCase().includes(q))return false;
+    if(pos&&r.pos!==pos)return false;
+    if(college&&r.college!==college)return false;
+    if(state&&r.state!==state)return false;
     return true;
   });
-  document.getElementById('draft-count').textContent=f.length+' prospects';
-  document.getElementById('draft-body').innerHTML=f.map(r=>{
-    const isHS=r.school_type==='High School';
-    return`<tr>
-      <td class="num">${fmtInt(r.rank)}</td>
-      <td class="name">${esc(r.player_name)}</td>
-      <td>${esc(r.position)}</td>
-      <td>${esc(r.school)}</td>
-      <td>${isHS?'<span class="badge badge-hs">High School</span>':'<span class="badge badge-college">College</span>'}</td>
-      <td>${esc(r.bats)}</td>
-      <td>${esc(r.throws)}</td>
-      <td>${esc(r.height)}</td>
-      <td class="num">${fmtInt(r.weight)}</td>
-      <td class="num">${fmtInt(r.age)}</td>
-    </tr>`;
-  }).join('');
+  document.getElementById('commits-count').textContent=f.length+' players';
+  document.getElementById('commits-body').innerHTML=f.map(r=>`<tr>
+    <td class="name">${esc(r.player)}</td>
+    <td>${esc(r.pos)}</td>
+    <td>${esc(r.college)}</td>
+    <td>${esc(r.height)}</td>
+    <td class="num">${fmtInt(r.weight)}</td>
+    <td>${esc(r.bats_throws)}</td>
+    <td>${esc(r.high_school)}</td>
+    <td>${esc(r.hometown)}</td>
+    <td>${esc(r.state)}</td>
+    <td>${esc(r.draft)}</td>
+  </tr>`).join('');
 }
 
 loadData();
