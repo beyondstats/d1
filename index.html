@@ -120,7 +120,6 @@
 
 <footer>
   <span>Beyond Stats · D1 Baseball</span>
-  <span>2026 Season</span>
 </footer>
 
 <script>
@@ -134,16 +133,9 @@ async function loadPortalSummary(){
 
     const hitters=data.filter(r=>r.pos!=='P');
     const pitchers=data.filter(r=>r.pos==='P');
-    const hAvail=hitters.filter(r=>!r.to_school||r.to_school==='--').length;
-    const pAvail=pitchers.filter(r=>!r.to_school||r.to_school==='--').length;
-
     document.getElementById('portal-summary').innerHTML=`
       <div class="stat-card"><div class="s-label">Hitters in Portal</div><div class="s-value">${hitters.length}</div><div class="s-sub">Total</div></div>
-      <div class="stat-card"><div class="s-label">Hitters Available</div><div class="s-value">${hAvail}</div><div class="s-sub">Not yet committed</div></div>
-      <div class="stat-card"><div class="s-label">Hitters Committed</div><div class="s-value">${hitters.length-hAvail}</div><div class="s-sub">New destination</div></div>
-      <div class="stat-card"><div class="s-label">Pitchers in Portal</div><div class="s-value">${pitchers.length}</div><div class="s-sub">Total</div></div>
-      <div class="stat-card"><div class="s-label">Pitchers Available</div><div class="s-value">${pAvail}</div><div class="s-sub">Not yet committed</div></div>
-      <div class="stat-card"><div class="s-label">Pitchers Committed</div><div class="s-value">${pitchers.length-pAvail}</div><div class="s-sub">New destination</div></div>`;
+      <div class="stat-card"><div class="s-label">Pitchers in Portal</div><div class="s-value">${pitchers.length}</div><div class="s-sub">Total</div></div>`;
   }catch(e){
     document.getElementById('portal-summary').innerHTML='<div class="stat-card"><div class="s-label">Transfer Portal</div><div class="s-value" style="font-size:0.8rem;color:var(--text-muted)">Unavailable</div></div>';
   }
