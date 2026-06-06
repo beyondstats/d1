@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Beyond Stats D1</title>
+  <link rel="stylesheet" href="/d1/style.css" />
+  <style>
+    .about-hero {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 5rem 2.5rem 4rem;
+    }
+    .about-hero .eyebrow {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .about-hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      max-width: 640px;
+      margin-bottom: 1.5rem;
+    }
+    .about-hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .about-hero p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.7;
+    }
+    .about-section {
+      max-width: 760px;
+      margin: 3rem 2.5rem;
+    }
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .about-item {
+      margin-bottom: 2rem;
+    }
+    .about-item h3 {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .about-item p {
+      font-size: 0.925rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+      max-width: 620px;
+    }
+    .data-note {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      margin-top: 3rem;
+      max-width: 760px;
+      margin-left: 2.5rem;
+      margin-right: 2.5rem;
+    }
+    .data-note p {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .data-note strong {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/d1/">Beyond<span>Stats</span> · D1</a>
+  <ul class="nav-links">
+    <li><a href="/d1/" class="nav-accent">Home</a></li>
+    <li><a href="/d1/stats/hitting/2026/stats_hitting_2026.html">Stats - Hitting</a></li>
+    <li><a href="/d1/stats/pitching/2026/stats_pitching_2026.html">Stats - Pitching</a></li>
+    <li><a href="/d1/transfers/hitters/2026/transfers_hitters_2026.html">Transfers - Hitters</a></li>
+    <li><a href="/d1/transfers/pitchers/2026/transfers_pitchers_2026.html">Transfers - Pitchers</a></li>
+    <li><a href="/d1/commits_2026.html">High School Commitments</a></li>
+    <li><a href="/d1/roster_summary_2026.html">Projected Roster Summary</a></li>
+    <li><a href="/d1/about.html" class="nav-accent active">About</a></li>
+  </ul>
+</nav>
+
+<div class="about-hero">
+  <div class="eyebrow">About This Site</div>
+  <h1>Beyond <em>Stats</em></h1>
+  <p>A personal analytics project tracking NCAA Division I baseball — bringing together statistics, the transfer portal, high school commitments, and roster projections in one place.</p>
+</div>
+
+<main>
+
+  <div class="about-section">
+    <div class="section-label">Purpose</div>
+
+    <div class="about-item">
+      <h3>Statistics</h3>
+      <p>Comprehensive hitting and pitching statistics for every player in NCAA Division I baseball, sourced from d1baseball.com. Players are flagged based on eligibility indicators — age-out candidates, likely draft entrants, and transfer portal activity — so you can quickly identify roster movement risks at any program.</p>
+    </div>
+
+    <div class="about-item">
+      <h3>Transfer Portal</h3>
+      <p>The transfer portal tracker cross-references active portal entries against season statistics, giving context to each player's production at their previous school. Hitters and pitchers are tracked separately, with full stat lines and conference context included.</p>
+    </div>
+
+    <div class="about-item">
+      <h3>High School Commitments</h3>
+      <p>PerfectGame D1 commitment data organized by player, college, position, and home state. Useful for understanding how programs are replenishing rosters through the recruiting pipeline.</p>
+    </div>
+
+    <div class="about-item">
+      <h3>Projected Roster Summary</h3>
+      <p>A team-by-team breakdown projecting how each D1 roster looks after accounting for age outs, draft departures, transfer portal exits, and incoming transfers. Tracks remaining player counts by position to give a snapshot of each program's roster health heading into the next season.</p>
+    </div>
+
+  </div>
+
+  <div class="data-note">
+    <p><strong>Data sources:</strong> Player statistics and transfer portal data are scraped from d1baseball.com. High school commitment data is sourced from PerfectGame. Draft prospect rankings are from MLB Pipeline. All data reflects the 2026 season and is updated periodically.</p>
+  </div>
+
+</main>
+
+<footer>
+  <span>Beyond Stats · D1 Baseball</span>
+  <span>About</span>
+</footer>
+
+</body>
+</html>
