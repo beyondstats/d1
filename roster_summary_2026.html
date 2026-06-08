@@ -58,12 +58,12 @@
         <thead>
           <tr>
             <th class="group-hdr" rowspan="2" style="text-align:left">Team</th>
-            <th class="group-hdr gs" colspan="10">2026 Roster</th>
-            <th class="group-hdr gs" colspan="10">Adjustments — Age Out</th>
-            <th class="group-hdr gs" colspan="10">Adjustments — Draft</th>
-            <th class="group-hdr gs" colspan="10">Adjustments — Transfers</th>
-            <th class="group-hdr gs" colspan="10">Adjustments — Commits</th>
-            <th class="group-hdr gs" colspan="12">Remaining</th>
+            <th class="group-hdr gs" colspan="11">2026 Roster</th>
+            <th class="group-hdr gs" colspan="11">Adjustments — Age Out</th>
+            <th class="group-hdr gs" colspan="9">Adjustments — Draft</th>
+            <th class="group-hdr gs" colspan="13">Adjustments — Transfers</th>
+            <th class="group-hdr gs" colspan="9">Adjustments — Commits</th>
+            <th class="group-hdr gs" colspan="15">Remaining</th>
           </tr>
           <tr>
             <th class="num gs" data-key="P_pos">P</th>
@@ -76,6 +76,7 @@
             <th class="num" data-key="CF_pos">CF</th>
             <th class="num" data-key="RF_pos">RF</th>
             <th class="num" data-key="DH">DH</th>
+            <th class="num" data-key="UT_pos">UT</th>
             <th class="num gs" data-key="AO_P">P</th>
             <th class="num" data-key="AO_C">C</th>
             <th class="num" data-key="AO_1B">1B</th>
@@ -86,16 +87,16 @@
             <th class="num" data-key="AO_CF">CF</th>
             <th class="num" data-key="AO_RF">RF</th>
             <th class="num" data-key="AO_DH">DH</th>
+            <th class="num" data-key="AO_UT">UT</th>
             <th class="num gs" data-key="DR_P">P</th>
             <th class="num" data-key="DR_C">C</th>
             <th class="num" data-key="DR_1B">1B</th>
             <th class="num" data-key="DR_2B">2B</th>
             <th class="num" data-key="DR_3B">3B</th>
             <th class="num" data-key="DR_SS">SS</th>
-            <th class="num" data-key="DR_LF">LF</th>
-            <th class="num" data-key="DR_CF">CF</th>
-            <th class="num" data-key="DR_RF">RF</th>
-            <th class="num" data-key="DR_DH">DH</th>
+            <th class="num" data-key="DR_IF">IF</th>
+            <th class="num" data-key="DR_OF">OF</th>
+            <th class="num" data-key="DR_UT">UT</th>
             <th class="num gs" data-key="TR_P">P</th>
             <th class="num" data-key="TR_C">C</th>
             <th class="num" data-key="TR_1B">1B</th>
@@ -106,15 +107,17 @@
             <th class="num" data-key="TR_CF">CF</th>
             <th class="num" data-key="TR_RF">RF</th>
             <th class="num" data-key="TR_DH">DH</th>
+            <th class="num" data-key="TR_IF">IF</th>
+            <th class="num" data-key="TR_OF">OF</th>
+            <th class="num" data-key="TR_UT">UT</th>
             <th class="num gs" data-key="CM_P">P</th>
             <th class="num" data-key="CM_C">C</th>
             <th class="num" data-key="CM_1B">1B</th>
             <th class="num" data-key="CM_2B">2B</th>
             <th class="num" data-key="CM_3B">3B</th>
             <th class="num" data-key="CM_SS">SS</th>
-            <th class="num" data-key="CM_LF">LF</th>
-            <th class="num" data-key="CM_CF">CF</th>
-            <th class="num" data-key="CM_RF">RF</th>
+            <th class="num" data-key="CM_OF">OF</th>
+            <th class="num" data-key="CM_IF">IF</th>
             <th class="num" data-key="CM_UT">UT</th>
             <th class="num gs" data-key="Rem_P">P</th>
             <th class="num" data-key="Rem_C">C</th>
@@ -126,6 +129,9 @@
             <th class="num" data-key="Remaining CF">CF</th>
             <th class="num" data-key="Remaining RF">RF</th>
             <th class="num" data-key="Rem_DH">DH</th>
+            <th class="num" data-key="Rem_IF">IF</th>
+            <th class="num" data-key="Rem_OF">OF</th>
+            <th class="num" data-key="Rem_UT">UT</th>
             <th class="num" data-key="TOTAL REMAINING">Total</th>
             <th class="num" data-key="Remaining TOTAL OF">OF Total</th>
           </tr>
@@ -184,22 +190,21 @@ const v=(row,i)=>(i>=0&&row[i]!=null)?row[i]:'';
       'Conference': row[2],
       'P_pos': v(row,POS),   'C':      v(row,POS+1), '1B':    v(row,POS+2),
       '2B':    v(row,POS+3), '3B':     v(row,POS+4), 'SS':    v(row,POS+5),
-      'LF_pos':v(row,POS+6), 'CF_pos': v(row,POS+7), 'RF_pos':v(row,POS+8), 'DH': v(row,POS+9),
+      'LF_pos':v(row,POS+6), 'CF_pos': v(row,POS+7), 'RF_pos':v(row,POS+8), 'DH': v(row,POS+9), 'UT_pos': v(row,POS+10),
       'AO_P':  v(row,AO),   'AO_C':  v(row,AO+1), 'AO_1B': v(row,AO+2), 'AO_2B': v(row,AO+3),
       'AO_3B': v(row,AO+4), 'AO_SS': v(row,AO+5), 'AO_LF': v(row,AO+6), 'AO_CF': v(row,AO+7),
-      'AO_RF': v(row,AO+8), 'AO_DH': v(row,AO+9), 'TOTAL AGE OUT': v(row,hi('TOTAL AGE OUT')),
+      'AO_RF': v(row,AO+8), 'AO_DH': v(row,AO+9), 'AO_UT': v(row,AO+10), 'TOTAL AGE OUT': v(row,hi('TOTAL AGE OUT')),
       'DR_P':  v(row,DR),   'DR_C':  v(row,DR+1), 'DR_1B': v(row,DR+2), 'DR_2B': v(row,DR+3),
-      'DR_3B': v(row,DR+4), 'DR_SS': v(row,DR+5), 'DR_LF': v(row,DR+6), 'DR_CF': v(row,DR+7),
-      'DR_RF': v(row,DR+8), 'DR_DH': v(row,DR+9), 'TOTAL DRAFT': v(row,hi('TOTAL DRAFT')),
+      'DR_3B': v(row,DR+4), 'DR_SS': v(row,DR+5), 'DR_IF': v(row,DR+6), 'DR_OF': v(row,DR+7), 'DR_UT': v(row,DR+8), 'TOTAL DRAFT': v(row,hi('TOTAL DRAFT')),
       'TR_P':  v(row,TR),   'TR_C':  v(row,TR+1), 'TR_1B': v(row,TR+2), 'TR_2B': v(row,TR+3),
       'TR_3B': v(row,TR+4), 'TR_SS': v(row,TR+5), 'TR_LF': v(row,TR+6), 'TR_CF': v(row,TR+7),
-      'TR_RF': v(row,TR+8), 'TR_DH': v(row,TR+9), 'TOTAL TRANSFERS': v(row,hi('TOTAL TRANSFERS')),
+      'TR_RF': v(row,TR+8), 'TR_DH': v(row,TR+9), 'TR_IF': v(row,TR+10), 'TR_OF': v(row,TR+11), 'TR_UT': v(row,TR+12), 'TOTAL TRANSFERS': v(row,hi('TOTAL TRANSFERS')),
       'CM_P':  v(row,CM),   'CM_C':  v(row,CM+1), 'CM_1B': v(row,CM+2), 'CM_2B': v(row,CM+3),
-      'CM_3B': v(row,CM+4), 'CM_SS': v(row,CM+5), 'CM_LF': v(row,CM+6), 'CM_CF': v(row,CM+7),
-      'CM_RF': v(row,CM+8), 'CM_UT': v(row,CM+9),
+      'CM_3B': v(row,CM+4), 'CM_SS': v(row,CM+5), 'CM_OF': v(row,CM+6), 'CM_IF': v(row,CM+7), 'CM_UT': v(row,CM+8), 'TOTAL COMMITS': v(row,hi('TOTAL COMMITS')),
       'Rem_P':       v(row,REM),   'Rem_C':  v(row,REM+1), 'Rem_1B': v(row,REM+2), 'Rem_2B': v(row,REM+3),
       'Rem_3B':      v(row,REM+4), 'Rem_SS': v(row,REM+5), 'Remaining LF': v(row,REM+6),
       'Remaining CF':v(row,REM+7), 'Remaining RF': v(row,REM+8), 'Rem_DH': v(row,REM+9),
+      'Rem_IF': v(row,REM+10), 'Rem_OF': v(row,REM+11), 'Rem_UT': v(row,REM+12),
       'TOTAL REMAINING': v(row,hi('TOTAL REMAINING')), 'Remaining TOTAL OF': v(row,hi('TOTAL REMAINING OF'))
     }));
 
@@ -236,17 +241,17 @@ function filterSummary(data){
   document.getElementById('summary-body').innerHTML=f.map(r=>`<tr>
     <td class="name">${esc(r.Team)}</td>
     <td class="num gs">${fmtInt(r.P_pos)}</td><td class="num">${fmtInt(r.C)}</td><td class="num">${fmtInt(r['1B'])}</td><td class="num">${fmtInt(r['2B'])}</td><td class="num">${fmtInt(r['3B'])}</td><td class="num">${fmtInt(r.SS)}</td>
-    <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td>
+    <td class="num">${fmtInt(r.LF_pos)}</td><td class="num">${fmtInt(r.CF_pos)}</td><td class="num">${fmtInt(r.RF_pos)}</td><td class="num">${fmtInt(r.DH)}</td><td class="num">${fmtInt(r.UT_pos)}</td>
     <td class="num gs">${fmtInt(r.AO_P)}</td><td class="num">${fmtInt(r.AO_C)}</td><td class="num">${fmtInt(r.AO_1B)}</td><td class="num">${fmtInt(r.AO_2B)}</td><td class="num">${fmtInt(r.AO_3B)}</td><td class="num">${fmtInt(r.AO_SS)}</td>
-    <td class="num">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r.AO_DH)}</td>
+    <td class="num">${fmtInt(r.AO_LF)}</td><td class="num">${fmtInt(r.AO_CF)}</td><td class="num">${fmtInt(r.AO_RF)}</td><td class="num">${fmtInt(r.AO_DH)}</td><td class="num">${fmtInt(r.AO_UT)}</td>
     <td class="num gs">${fmtInt(r.DR_P)}</td><td class="num">${fmtInt(r.DR_C)}</td><td class="num">${fmtInt(r.DR_1B)}</td><td class="num">${fmtInt(r.DR_2B)}</td><td class="num">${fmtInt(r.DR_3B)}</td><td class="num">${fmtInt(r.DR_SS)}</td>
-    <td class="num">${fmtInt(r.DR_LF)}</td><td class="num">${fmtInt(r.DR_CF)}</td><td class="num">${fmtInt(r.DR_RF)}</td><td class="num">${fmtInt(r.DR_DH)}</td>
+    <td class="num">${fmtInt(r.DR_IF)}</td><td class="num">${fmtInt(r.DR_OF)}</td><td class="num">${fmtInt(r.DR_UT)}</td>
     <td class="num gs">${fmtInt(r.TR_P)}</td><td class="num">${fmtInt(r.TR_C)}</td><td class="num">${fmtInt(r.TR_1B)}</td><td class="num">${fmtInt(r.TR_2B)}</td><td class="num">${fmtInt(r.TR_3B)}</td><td class="num">${fmtInt(r.TR_SS)}</td>
-    <td class="num">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r.TR_DH)}</td>
+    <td class="num">${fmtInt(r.TR_LF)}</td><td class="num">${fmtInt(r.TR_CF)}</td><td class="num">${fmtInt(r.TR_RF)}</td><td class="num">${fmtInt(r.TR_DH)}</td><td class="num">${fmtInt(r.TR_IF)}</td><td class="num">${fmtInt(r.TR_OF)}</td><td class="num">${fmtInt(r.TR_UT)}</td>
     <td class="num gs">${fmtInt(r.CM_P)}</td><td class="num">${fmtInt(r.CM_C)}</td><td class="num">${fmtInt(r.CM_1B)}</td><td class="num">${fmtInt(r.CM_2B)}</td><td class="num">${fmtInt(r.CM_3B)}</td><td class="num">${fmtInt(r.CM_SS)}</td>
-    <td class="num">${fmtInt(r.CM_LF)}</td><td class="num">${fmtInt(r.CM_CF)}</td><td class="num">${fmtInt(r.CM_RF)}</td><td class="num">${fmtInt(r.CM_UT)}</td>
+    <td class="num">${fmtInt(r.CM_OF)}</td><td class="num">${fmtInt(r.CM_IF)}</td><td class="num">${fmtInt(r.CM_UT)}</td>
     <td class="num gs">${fmtInt(r.Rem_P)}</td><td class="num">${fmtInt(r.Rem_C)}</td><td class="num">${fmtInt(r.Rem_1B)}</td><td class="num">${fmtInt(r.Rem_2B)}</td><td class="num">${fmtInt(r.Rem_3B)}</td><td class="num">${fmtInt(r.Rem_SS)}</td>
-    <td class="num">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r.Rem_DH)}</td>
+    <td class="num">${fmtInt(r['Remaining LF'])}</td><td class="num">${fmtInt(r['Remaining CF'])}</td><td class="num">${fmtInt(r['Remaining RF'])}</td><td class="num">${fmtInt(r.Rem_DH)}</td><td class="num">${fmtInt(r.Rem_IF)}</td><td class="num">${fmtInt(r.Rem_OF)}</td><td class="num">${fmtInt(r.Rem_UT)}</td>
     <td class="num">${fmtInt(r['TOTAL REMAINING'])}</td><td class="num">${fmtInt(r['Remaining TOTAL OF'])}</td>
   </tr>`).join('');
 }
