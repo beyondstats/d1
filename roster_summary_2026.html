@@ -13,6 +13,10 @@
     .filter-bar input, .filter-bar select { font-family: var(--mono); font-size: 0.75rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; height: 32px; }
     .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
     .filter-bar input { width: 200px; }
+    .filter-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; width: 100%; margin-top: 0.25rem; }
+    .filter-row-label { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; margin-right: 0.25rem; }
+    .num-filter-label { display: inline-flex; align-items: center; gap: 0.25rem; font-family: var(--mono); font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; }
+    .num-filter-label input { width: 40px !important; padding: 0.3rem 0.3rem !important; font-size: 0.7rem !important; height: 26px !important; text-align: center; }
     .row-count { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); margin-left: auto; align-self: center; }
     thead th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
     thead th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
@@ -21,10 +25,12 @@
     thead th[data-key] { cursor: pointer; }
     thead th[data-key]:hover { color: var(--text); }
     .gs { border-left: 2px solid var(--text-muted); }
-    .table-wrap { overflow-y: auto; max-height: calc(100vh - 280px); }
+    .table-wrap { overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 280px); }
     thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); box-shadow: 0 1px 0 var(--border); }
     thead th.group-hdr { position: sticky; top: 0; z-index: 3; background: var(--bg); }
     #summary-table thead tr:nth-child(2) th { top: 27px; z-index: 2; }
+    #summary-table thead th.col-team { position: sticky; left: 0; top: 0; z-index: 5; background: var(--bg); }
+    #summary-table tbody td.name { position: sticky; left: 0; z-index: 1; background: var(--surface); box-shadow: 1px 0 0 var(--border); }
   </style>
 </head>
 <body>
@@ -51,13 +57,31 @@
     <div class="filter-bar">
       <input type="text" id="summary-search" placeholder="Search team or conference…" />
       <span class="row-count" id="summary-count"></span>
+      <div class="filter-row">
+        <span class="filter-row-label">Projected ≥</span>
+        <label class="num-filter-label">P<input type="number" class="proj-filter" data-key="Rem_P" min="0" placeholder="—"></label>
+        <label class="num-filter-label">C<input type="number" class="proj-filter" data-key="Rem_C" min="0" placeholder="—"></label>
+        <label class="num-filter-label">1B<input type="number" class="proj-filter" data-key="Rem_1B" min="0" placeholder="—"></label>
+        <label class="num-filter-label">2B<input type="number" class="proj-filter" data-key="Rem_2B" min="0" placeholder="—"></label>
+        <label class="num-filter-label">3B<input type="number" class="proj-filter" data-key="Rem_3B" min="0" placeholder="—"></label>
+        <label class="num-filter-label">SS<input type="number" class="proj-filter" data-key="Rem_SS" min="0" placeholder="—"></label>
+        <label class="num-filter-label">LF<input type="number" class="proj-filter" data-key="Remaining LF" min="0" placeholder="—"></label>
+        <label class="num-filter-label">CF<input type="number" class="proj-filter" data-key="Remaining CF" min="0" placeholder="—"></label>
+        <label class="num-filter-label">RF<input type="number" class="proj-filter" data-key="Remaining RF" min="0" placeholder="—"></label>
+        <label class="num-filter-label">DH<input type="number" class="proj-filter" data-key="Rem_DH" min="0" placeholder="—"></label>
+        <label class="num-filter-label">IF<input type="number" class="proj-filter" data-key="Rem_IF" min="0" placeholder="—"></label>
+        <label class="num-filter-label">OF<input type="number" class="proj-filter" data-key="Rem_OF" min="0" placeholder="—"></label>
+        <label class="num-filter-label">UT<input type="number" class="proj-filter" data-key="Rem_UT" min="0" placeholder="—"></label>
+        <label class="num-filter-label">Total<input type="number" class="proj-filter" data-key="TOTAL REMAINING" min="0" placeholder="—"></label>
+        <label class="num-filter-label">OF Tot<input type="number" class="proj-filter" data-key="Remaining TOTAL OF" min="0" placeholder="—"></label>
+      </div>
     </div>
     <div class="table-wrap">
       <div class="table-title"><h1 style="font-family:var(--serif);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;margin-bottom:1rem;">Roster Summary</h1></div>
       <table id="summary-table">
         <thead>
           <tr>
-            <th class="group-hdr" rowspan="2" style="text-align:left">Team</th>
+            <th class="group-hdr col-team" rowspan="2" style="text-align:left">Team</th>
             <th class="group-hdr gs" colspan="11">2025-2026 ROSTER</th>
             <th class="group-hdr gs" colspan="11">Adjustments — Age Out</th>
             <th class="group-hdr gs" colspan="9">Adjustments — Draft</th>
@@ -227,14 +251,17 @@ function buildSummary(data){
     filterSummary(sorted);
   }
   document.getElementById('summary-search').addEventListener('input',()=>filterSummary(sorted));
+  document.querySelectorAll('.proj-filter').forEach(el=>el.addEventListener('input',()=>filterSummary(sorted)));
   makeGroupedTableSortable('summary-table',render);
   filterSummary(sorted);
 }
 
 function filterSummary(data){
   const q=document.getElementById('summary-search').value.toLowerCase();
+  const projFilters=[...document.querySelectorAll('.proj-filter')].map(el=>({key:el.dataset.key,min:el.value===''?null:parseFloat(el.value)})).filter(f=>f.min!==null);
   const f=data.filter(r=>{
     if(q&&!String(r.Team||'').toLowerCase().includes(q)&&!String(r.Conference||'').toLowerCase().includes(q))return false;
+    for(const{key,min}of projFilters){const v=parseFloat(r[key]);if(isNaN(v)||v<min)return false;}
     return true;
   });
   document.getElementById('summary-count').textContent=f.length+' teams';
