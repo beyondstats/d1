@@ -58,7 +58,7 @@
       <input type="text" id="summary-search" placeholder="Search team or conference…" />
       <span class="row-count" id="summary-count"></span>
       <div class="filter-row">
-        <span class="filter-row-label">Projected ≥</span>
+        <span class="filter-row-label">Projected ≤</span>
         <label class="num-filter-label">P<input type="number" class="proj-filter" data-key="Rem_P" min="0" placeholder="—"></label>
         <label class="num-filter-label">C<input type="number" class="proj-filter" data-key="Rem_C" min="0" placeholder="—"></label>
         <label class="num-filter-label">1B<input type="number" class="proj-filter" data-key="Rem_1B" min="0" placeholder="—"></label>
@@ -258,10 +258,10 @@ function buildSummary(data){
 
 function filterSummary(data){
   const q=document.getElementById('summary-search').value.toLowerCase();
-  const projFilters=[...document.querySelectorAll('.proj-filter')].map(el=>({key:el.dataset.key,min:el.value===''?null:parseFloat(el.value)})).filter(f=>f.min!==null);
+  const projFilters=[...document.querySelectorAll('.proj-filter')].map(el=>({key:el.dataset.key,max:el.value===''?null:parseFloat(el.value)})).filter(f=>f.max!==null);
   const f=data.filter(r=>{
     if(q&&!String(r.Team||'').toLowerCase().includes(q)&&!String(r.Conference||'').toLowerCase().includes(q))return false;
-    for(const{key,min}of projFilters){const v=parseFloat(r[key]);if(isNaN(v)||v<min)return false;}
+    for(const{key,max}of projFilters){const v=parseFloat(r[key]);if(isNaN(v)||v>max)return false;}
     return true;
   });
   document.getElementById('summary-count').textContent=f.length+' teams';
